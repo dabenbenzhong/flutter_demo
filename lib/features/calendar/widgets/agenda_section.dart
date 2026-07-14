@@ -4,7 +4,14 @@ import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
 
 class AgendaSection extends StatelessWidget {
-  const AgendaSection({super.key});
+  const AgendaSection({
+    required this.selectedDate,
+    required this.events,
+    super.key,
+  });
+
+  final DateTime selectedDate;
+  final List<CalendarEvent> events;
 
   @override
   Widget build(BuildContext context) {
@@ -13,30 +20,33 @@ class AgendaSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _AgendaHeader(),
+          _AgendaHeader(selectedDate: selectedDate),
           const SizedBox(height: 22),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const _TimeColumn(),
-                const SizedBox(width: 13),
-                const _TimelineRail(),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    children: [
-                      for (final event in todayEvents) ...[
-                        AgendaEventTile(event: event),
-                        if (event != todayEvents.last)
-                          const SizedBox(height: 14),
+          if (events.isEmpty)
+            const _EmptyAgendaState()
+          else
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _TimeColumn(events: events),
+                  const SizedBox(width: 13),
+                  _TimelineRail(events: events),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        for (final event in events) ...[
+                          AgendaEventTile(event: event),
+                          if (event != events.last)
+                            const SizedBox(height: 14),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -119,16 +129,18 @@ class AgendaEventTile extends StatelessWidget {
 }
 
 class _AgendaHeader extends StatelessWidget {
-  const _AgendaHeader();
+  const _AgendaHeader({required this.selectedDate});
+
+  final DateTime selectedDate;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        const Text(
-          '7月13日',
-          style: TextStyle(
+        Text(
+          '${selectedDate.month}月${selectedDate.day}日',
+          style: const TextStyle(
             color: warmBrown,
             fontSize: 34,
             fontWeight: FontWeight.w800,
@@ -143,7 +155,7 @@ class _AgendaHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '周一',
+                _weekdayText(selectedDate),
                 style: TextStyle(
                   color: warmBrown.withValues(alpha: 0.86),
                   fontSize: 16,
@@ -154,7 +166,7 @@ class _AgendaHeader extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                '农历五月廿九',
+                _lunarDescription(selectedDate),
                 style: TextStyle(
                   color: warmBrown.withValues(alpha: 0.86),
                   fontSize: 16,
@@ -192,7 +204,9 @@ class _AgendaHeader extends StatelessWidget {
 }
 
 class _TimeColumn extends StatelessWidget {
-  const _TimeColumn();
+  const _TimeColumn({required this.events});
+
+  final List<CalendarEvent> events;
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +216,7 @@ class _TimeColumn extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final event in todayEvents)
+          for (final event in events)
             SizedBox(
               height: 86,
               child: Align(
@@ -228,7 +242,9 @@ class _TimeColumn extends StatelessWidget {
 }
 
 class _TimelineRail extends StatelessWidget {
-  const _TimelineRail();
+  const _TimelineRail({required this.events});
+
+  final List<CalendarEvent> events;
 
   @override
   Widget build(BuildContext context) {
@@ -242,14 +258,14 @@ class _TimelineRail extends StatelessWidget {
             bottom: 28,
             child: Container(width: 2, color: const Color(0xffd4cbc1)),
           ),
-          for (var index = 0; index < todayEvents.length; index++)
+          for (var index = 0; index < events.length; index++)
             Positioned(
               top: 21 + (index * 100),
               child: Container(
                 width: 13,
                 height: 13,
                 decoration: BoxDecoration(
-                  color: todayEvents[index].color,
+                  color: events[index].color,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -259,6 +275,52 @@ class _TimelineRail extends StatelessWidget {
       ),
     );
   }
+}
+
+class _EmptyAgendaState extends StatelessWidget {
+  const _EmptyAgendaState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 34),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+      ),
+      child: Text(
+        '当天没有事项',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: warmBrown.withValues(alpha: 0.68),
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+String _weekdayText(DateTime date) {
+  const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  return weekdays[date.weekday - 1];
+}
+
+String _lunarDescription(DateTime date) {
+  if (date.year == 2026 && date.month == 7 && date.day == 13) {
+    return '农历五月廿九';
+  }
+
+  for (final day in calendarDays) {
+    if (day.isCurrentMonth && day.day == date.day) {
+      return '农历${day.lunarText}';
+    }
+  }
+
+  return '农历';
 }
 
 class _EventIcon extends StatelessWidget {

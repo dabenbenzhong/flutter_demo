@@ -67,8 +67,9 @@ const calendarDays = <CalendarDay>[
   CalendarDay(day: 2, lunarText: '初九', isCurrentMonth: false),
 ];
 
-const todayEvents = <CalendarEvent>[
+final todayEvents = <CalendarEvent>[
   CalendarEvent(
+    date: DateTime(2026, 7, 13),
     time: '09:00',
     title: '团队晨会',
     detail: '会议室 A · 30分钟',
@@ -77,6 +78,7 @@ const todayEvents = <CalendarEvent>[
     iconBackground: Color(0xffeef4ff),
   ),
   CalendarEvent(
+    date: DateTime(2026, 7, 13),
     time: '14:00',
     title: '产品评审',
     detail: '线上会议 · 60分钟',
@@ -85,6 +87,7 @@ const todayEvents = <CalendarEvent>[
     iconBackground: Color(0xfff5edff),
   ),
   CalendarEvent(
+    date: DateTime(2026, 7, 13),
     time: '19:30',
     title: '健身',
     detail: '万科健身 · 60分钟',

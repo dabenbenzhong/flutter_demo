@@ -20,4 +20,21 @@ class CalendarDay {
   final bool isCurrentMonth;
   final bool isSelected;
   final bool showSelectionPointer;
+
+  CalendarDay copyWith({
+    List<Color>? markerColors,
+    bool? isSelected,
+    bool? showSelectionPointer,
+  }) {
+    return CalendarDay(
+      day: day,
+      lunarText: lunarText,
+      label: label,
+      labelColor: labelColor,
+      markerColors: markerColors ?? this.markerColors,
+      isCurrentMonth: isCurrentMonth,
+      isSelected: isSelected ?? this.isSelected,
+      showSelectionPointer: showSelectionPointer ?? this.showSelectionPointer,
+    );
+  }
 }

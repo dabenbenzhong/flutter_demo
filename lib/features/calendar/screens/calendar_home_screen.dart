@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
+import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
@@ -6,14 +8,40 @@ import 'package:my_flutter_demo/features/calendar/widgets/calendar_header.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
 
-class CalendarHomeScreen extends StatelessWidget {
-  const CalendarHomeScreen({super.key});
+class CalendarHomeScreen extends StatefulWidget {
+  const CalendarHomeScreen({
+    this.initialSelectedDate,
+    this.initialEvents = const [],
+    super.key,
+  });
+
+  final DateTime? initialSelectedDate;
+  final List<CalendarEvent> initialEvents;
+
+  @override
+  State<CalendarHomeScreen> createState() => _CalendarHomeScreenState();
+}
+
+class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
+  late DateTime _selectedDate;
+  late final List<CalendarEvent> _events;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialSelectedDate ?? DateTime(2026, 7, 13);
+    _events = List.of(widget.initialEvents);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final selectedEvents = _events
+        .where((event) => isSameCalendarDate(event.date, _selectedDate))
+        .toList();
+
     return Scaffold(
       extendBody: true,
-      body: const _CalendarBackground(
+      body: _CalendarBackground(
         child: SafeArea(
           bottom: false,
           child: SingleChildScrollView(
@@ -21,9 +49,12 @@ class CalendarHomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 CalendarHeader(),
-                CalendarMonthCard(),
+                CalendarMonthCard(
+                  selectedDate: _selectedDate,
+                  onDateSelected: _selectDate,
+                ),
                 SizedBox(height: 20),
-                AgendaSection(),
+                AgendaSection(selectedDate: _selectedDate, events: selectedEvents),
                 SizedBox(height: 20),
                 InspirationBanner(),
               ],
@@ -35,6 +66,12 @@ class CalendarHomeScreen extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: const CalendarBottomNavigation(),
     );
+  }
+
+  void _selectDate(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+    });
   }
 }
 
