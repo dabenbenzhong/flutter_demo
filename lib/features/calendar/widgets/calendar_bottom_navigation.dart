@@ -20,7 +20,7 @@ class CalendarBottomNavigation extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 76,
+          height: 64,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: const [
@@ -56,17 +56,17 @@ class _NavItem extends StatelessWidget {
     final color = isSelected ? caramel : warmBrown.withValues(alpha: 0.56);
 
     return SizedBox(
-      width: 74,
+      width: 64,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 31),
-          const SizedBox(height: 5),
+          Icon(icon, color: color, size: 26),
+          const SizedBox(height: 3),
           Text(
             label,
             style: TextStyle(
               color: color,
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               letterSpacing: 0,
             ),

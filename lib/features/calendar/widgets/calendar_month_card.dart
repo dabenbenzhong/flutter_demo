@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_day.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
-import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
+import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 
 class CalendarMonthCard extends StatelessWidget {
   const CalendarMonthCard({
@@ -23,23 +23,24 @@ class CalendarMonthCard extends StatelessWidget {
     final effectiveSelectedDate = selectedDate ?? DateTime(2026, 7, 13);
 
     return AppGlassCard(
-      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
       child: Column(
         children: [
           const _WeekdayRow(),
-          const SizedBox(height: 14),
+          const SizedBox(height: 7),
           Divider(
             height: 1,
             color: const Color(0xffd9cfc3).withValues(alpha: 0.72),
           ),
-          const SizedBox(height: 17),
+          const SizedBox(height: 9),
           GridView.builder(
             itemCount: calendarDays.length,
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              mainAxisExtent: 76,
+              mainAxisExtent: 47,
             ),
             itemBuilder: (context, index) {
               final day = calendarDays[index];
@@ -78,7 +79,8 @@ class CalendarMonthCard extends StatelessWidget {
   List<Color> _eventColorsForDate(DateTime date) {
     final colors = <Color>[];
     for (final event in events) {
-      if (isSameCalendarDate(event.date, date) && !colors.contains(event.color)) {
+      if (isSameCalendarDate(event.date, date) &&
+          !colors.contains(event.color)) {
         colors.add(event.color);
       }
       if (colors.length == 3) {
@@ -112,7 +114,7 @@ class _WeekdayRow extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: warmBrown,
-                fontSize: 19,
+                fontSize: 17,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0,
               ),

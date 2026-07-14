@@ -7,6 +7,7 @@ import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 
@@ -41,6 +42,24 @@ void main() {
     expect(find.text('建党节'), findsOneWidget);
     expect(find.text('小暑'), findsOneWidget);
     expect(find.text('大暑'), findsOneWidget);
+  });
+
+  testWidgets('mobile dashboard uses compact typography and controls', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(393, 852));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(CalendarApp());
+
+    final title = tester.widget<Text>(find.text('2026年7月'));
+    expect(title.style?.fontSize, lessThanOrEqualTo(32));
+
+    final selectedDay = tester.widget<Text>(find.text('13').first);
+    expect(selectedDay.style?.fontSize, lessThanOrEqualTo(18));
+
+    expect(tester.getSize(find.byType(AddEventButton)), const Size(64, 64));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('selected date drives the agenda list and empty state', (

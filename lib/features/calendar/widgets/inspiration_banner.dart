@@ -9,22 +9,22 @@ class InspirationBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppGlassCard(
       padding: EdgeInsets.zero,
-      borderRadius: 22,
+      borderRadius: 20,
       child: SizedBox(
-        height: 136,
+        height: 116,
         child: Stack(
           children: [
             Positioned.fill(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(20),
                 child: CustomPaint(painter: _BannerPainter()),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(30, 24, 180, 20),
+              padding: const EdgeInsets.fromLTRB(24, 16, 130, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
                     '每一天，都是更好的自己。',
@@ -32,19 +32,19 @@ class InspirationBanner extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: warmBrown,
-                      fontSize: 21,
+                      fontSize: 17,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0,
                     ),
                   ),
-                  const SizedBox(height: 17),
+                  const SizedBox(height: 9),
                   Text(
                     '一 日程 · 规划 · 专注 · 成长',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: warmBrown.withValues(alpha: 0.72),
-                      fontSize: 15,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0,
                     ),

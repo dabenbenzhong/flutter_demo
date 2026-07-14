@@ -6,53 +6,64 @@ class CalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    '2026年7月',
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      color: warmBrown,
-                      fontSize: 42,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 390;
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 12, 16, isCompact ? 12 : 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '2026年7月',
+                        maxLines: 1,
+                        overflow: TextOverflow.visible,
+                        softWrap: false,
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              color: warmBrown,
+                              fontSize: isCompact ? 30 : 34,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0,
+                            ),
+                      ),
                     ),
-                  ),
+                    SizedBox(width: isCompact ? 4 : 8),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: warmBrown,
+                      size: isCompact ? 24 : 28,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: warmBrown,
-                  size: 34,
-                ),
-              ],
-            ),
+              ),
+              TodayButton(isCompact: isCompact),
+              SizedBox(width: isCompact ? 7 : 10),
+              SearchButton(isCompact: isCompact),
+            ],
           ),
-          const _TodayButton(),
-          const SizedBox(width: 14),
-          const _SearchButton(),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-class _TodayButton extends StatelessWidget {
-  const _TodayButton();
+class TodayButton extends StatelessWidget {
+  const TodayButton({required this.isCompact, super.key});
+
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 25),
+      height: isCompact ? 38 : 40,
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 15 : 18),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.6),
@@ -70,7 +81,7 @@ class _TodayButton extends StatelessWidget {
         '今天',
         style: TextStyle(
           color: warmBrown,
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
         ),
@@ -79,20 +90,22 @@ class _TodayButton extends StatelessWidget {
   }
 }
 
-class _SearchButton extends StatelessWidget {
-  const _SearchButton();
+class SearchButton extends StatelessWidget {
+  const SearchButton({required this.isCompact, super.key});
+
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 58,
-      height: 58,
+      width: isCompact ? 44 : 48,
+      height: isCompact ? 44 : 48,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.62),
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
       ),
-      child: const Icon(Icons.search, color: warmBrown, size: 32),
+      child: Icon(Icons.search, color: warmBrown, size: isCompact ? 24 : 26),
     );
   }
 }

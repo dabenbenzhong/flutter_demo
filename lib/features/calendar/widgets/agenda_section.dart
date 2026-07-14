@@ -18,12 +18,12 @@ class AgendaSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppGlassCard(
-      padding: const EdgeInsets.fromLTRB(24, 24, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 18, 16, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _AgendaHeader(selectedDate: selectedDate),
-          const SizedBox(height: 22),
+          const SizedBox(height: 16),
           if (events.isEmpty)
             const _EmptyAgendaState()
           else
@@ -32,9 +32,9 @@ class AgendaSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _TimeColumn(events: events),
-                  const SizedBox(width: 13),
+                  const SizedBox(width: 10),
                   _TimelineRail(events: events),
-                  const SizedBox(width: 18),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       children: [
@@ -43,7 +43,7 @@ class AgendaSection extends StatelessWidget {
                             event: event,
                             onDelete: () => onDeleteEvent(event),
                           ),
-                          if (event != events.last) const SizedBox(height: 14),
+                          if (event != events.last) const SizedBox(height: 10),
                         ],
                       ],
                     ),
@@ -58,11 +58,7 @@ class AgendaSection extends StatelessWidget {
 }
 
 class AgendaEventTile extends StatelessWidget {
-  const AgendaEventTile({
-    required this.event,
-    required this.onDelete,
-    super.key,
-  });
+  const AgendaEventTile({required this.event, required this.onDelete, super.key});
 
   final CalendarEvent event;
   final VoidCallback onDelete;
@@ -70,7 +66,7 @@ class AgendaEventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 86,
+      height: 74,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.74),
         borderRadius: BorderRadius.circular(16),
@@ -86,7 +82,7 @@ class AgendaEventTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 6,
+            width: 5,
             height: double.infinity,
             decoration: BoxDecoration(
               color: event.color,
@@ -96,7 +92,7 @@ class AgendaEventTile extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 18),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -108,19 +104,19 @@ class AgendaEventTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: warmBrown,
-                    fontSize: 23,
+                    fontSize: 19,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   event.detail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: warmBrown.withValues(alpha: 0.7),
-                    fontSize: 17,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0,
                   ),
@@ -128,7 +124,7 @@ class AgendaEventTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           _EventIcon(event: event),
           IconButton(
             key: ValueKey(
@@ -156,38 +152,51 @@ class _AgendaHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          '${selectedDate.month}月${selectedDate.day}日',
-          style: const TextStyle(
-            color: warmBrown,
-            fontSize: 34,
-            fontWeight: FontWeight.w800,
-            height: 1,
-            letterSpacing: 0,
-          ),
-        ),
-        const SizedBox(width: 14),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 2),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _weekdayText(selectedDate),
-                style: TextStyle(
-                  color: warmBrown.withValues(alpha: 0.86),
-                  fontSize: 16,
-                  height: 1,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Flexible(
+                    child: Text(
+                      '${selectedDate.month}月${selectedDate.day}日',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: warmBrown,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      _weekdayText(selectedDate),
+                      style: TextStyle(
+                        color: warmBrown.withValues(alpha: 0.86),
+                        fontSize: 14,
+                        height: 1,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 9),
               Text(
                 _lunarDescription(selectedDate),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: warmBrown.withValues(alpha: 0.86),
-                  fontSize: 16,
+                  fontSize: 14,
                   height: 1,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
@@ -196,23 +205,23 @@ class _AgendaHeader extends StatelessWidget {
             ],
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 10),
         Padding(
-          padding: const EdgeInsets.only(bottom: 5),
+          padding: const EdgeInsets.only(bottom: 2),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Text(
+            children: [
+              const Text(
                 '33日后 周例会',
                 style: TextStyle(
                   color: warmBrown,
-                  fontSize: 16,
+                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
                 ),
               ),
-              SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: warmBrown, size: 26),
+              SizedBox(width: 5),
+              Icon(Icons.chevron_right_rounded, color: warmBrown, size: 22),
             ],
           ),
         ),
@@ -229,23 +238,23 @@ class _TimeColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 68,
+      width: 58,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final event in events)
             SizedBox(
-              height: 86,
+              height: 74,
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: 16),
                   child: Text(
                     event.time,
                     style: const TextStyle(
                       color: warmBrown,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0,
                     ),
@@ -267,21 +276,21 @@ class _TimelineRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 18,
+      width: 15,
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
           Positioned(
-            top: 28,
-            bottom: 28,
+            top: 24,
+            bottom: 24,
             child: Container(width: 2, color: const Color(0xffd4cbc1)),
           ),
           for (var index = 0; index < events.length; index++)
             Positioned(
-              top: 21 + (index * 100),
+              top: 18 + (index * 84),
               child: Container(
-                width: 13,
-                height: 13,
+                width: 11,
+                height: 11,
                 decoration: BoxDecoration(
                   color: events[index].color,
                   shape: BoxShape.circle,
@@ -302,7 +311,7 @@ class _EmptyAgendaState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 34),
+      padding: const EdgeInsets.symmetric(vertical: 30),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
@@ -313,7 +322,7 @@ class _EmptyAgendaState extends StatelessWidget {
         textAlign: TextAlign.center,
         style: TextStyle(
           color: warmBrown.withValues(alpha: 0.68),
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.w700,
           letterSpacing: 0,
         ),
@@ -349,11 +358,11 @@ class _EventIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
-      height: 50,
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
         color: event.iconBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: event.color.withValues(alpha: 0.16),
@@ -362,7 +371,7 @@ class _EventIcon extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(event.icon, color: event.color, size: 31),
+      child: Icon(event.icon, color: event.color, size: 25),
     );
   }
 }

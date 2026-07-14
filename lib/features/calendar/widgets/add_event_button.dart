@@ -15,8 +15,8 @@ class AddEventButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onPressed,
         child: Container(
-          width: 78,
-          height: 78,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
@@ -28,12 +28,12 @@ class AddEventButton extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: caramel.withValues(alpha: 0.42),
-                blurRadius: 22,
-                offset: const Offset(0, 12),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: const Icon(Icons.add, color: Colors.white, size: 46),
+          child: const Icon(Icons.add, color: Colors.white, size: 36),
         ),
       ),
     );

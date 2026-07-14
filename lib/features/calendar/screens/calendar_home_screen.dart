@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
-import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
-import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/event_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_header.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
-import 'package:my_flutter_demo/features/calendar/widgets/event_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
+import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
+import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 
 class CalendarHomeScreen extends StatefulWidget {
   const CalendarHomeScreen({
@@ -54,27 +54,32 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     return Scaffold(
       extendBody: true,
       body: _CalendarBackground(
-        child: SafeArea(
-          bottom: false,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(18, 0, 18, 112),
-            child: Column(
-              children: [
-                CalendarHeader(),
-                CalendarMonthCard(
-                  selectedDate: _selectedDate,
-                  onDateSelected: _selectDate,
-                  events: _events,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 430),
+            child: SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(12, 0, 12, 96),
+                child: Column(
+                  children: [
+                    CalendarHeader(),
+                    CalendarMonthCard(
+                      selectedDate: _selectedDate,
+                      onDateSelected: _selectDate,
+                      events: _events,
+                    ),
+                    SizedBox(height: 16),
+                    AgendaSection(
+                      selectedDate: _selectedDate,
+                      events: selectedEvents,
+                      onDeleteEvent: _confirmDeleteEvent,
+                    ),
+                    SizedBox(height: 16),
+                    InspirationBanner(),
+                  ],
                 ),
-                SizedBox(height: 20),
-                AgendaSection(
-                  selectedDate: _selectedDate,
-                  events: selectedEvents,
-                  onDeleteEvent: _confirmDeleteEvent,
-                ),
-                SizedBox(height: 20),
-                InspirationBanner(),
-              ],
+              ),
             ),
           ),
         ),
