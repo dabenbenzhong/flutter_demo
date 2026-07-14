@@ -37,10 +37,11 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedEvents = _events
-        .where((event) => isSameCalendarDate(event.date, _selectedDate))
-        .toList()
-      ..sort(_compareEventsByStartTime);
+    final selectedEvents =
+        _events
+            .where((event) => isSameCalendarDate(event.date, _selectedDate))
+            .toList()
+          ..sort(_compareEventsByStartTime);
 
     return Scaffold(
       extendBody: true,
@@ -61,6 +62,7 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
                 AgendaSection(
                   selectedDate: _selectedDate,
                   events: selectedEvents,
+                  onDeleteEvent: _confirmDeleteEvent,
                 ),
                 SizedBox(height: 20),
                 InspirationBanner(),
@@ -95,6 +97,34 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
 
     setState(() {
       _events.add(event);
+    });
+  }
+
+  Future<void> _confirmDeleteEvent(CalendarEvent event) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除事项？'),
+        content: Text('确认删除“${event.title}”吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    setState(() {
+      _events.remove(event);
     });
   }
 }

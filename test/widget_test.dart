@@ -173,6 +173,89 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('keeps an item when delete confirmation is cancelled', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const CalendarApp());
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+
+    await _createEvent(
+      tester,
+      title: '午间散步',
+      startTime: '12:00',
+      endTime: '12:30',
+    );
+
+    final walkDeleteButton = find.byKey(_deleteKey('2026-7-14-12:00-午间散步'));
+    await tester.ensureVisible(walkDeleteButton);
+    await tester.pumpAndSettle();
+    await tester.tap(walkDeleteButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('删除事项？'), findsOneWidget);
+    expect(find.text('确认删除“午间散步”吗？'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('午间散步'), findsOneWidget);
+    expect(find.text('当天没有事项'), findsNothing);
+  });
+
+  testWidgets('deletes a confirmed item without affecting other dates', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const CalendarApp());
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+    await _createEvent(
+      tester,
+      title: '读书',
+      startTime: '10:00',
+      endTime: '11:00',
+    );
+
+    await tester.tap(find.text('15'));
+    await tester.pumpAndSettle();
+    await _createEvent(
+      tester,
+      title: '整理书架',
+      startTime: '16:00',
+      endTime: '17:00',
+    );
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+
+    final readingDeleteButton = find.byKey(_deleteKey('2026-7-14-10:00-读书'));
+    await tester.ensureVisible(readingDeleteButton);
+    await tester.pumpAndSettle();
+    await tester.tap(readingDeleteButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('读书'), findsNothing);
+    expect(find.text('当天没有事项'), findsOneWidget);
+    expect(find.byKey(const ValueKey('event-marker-2026-7-14')), findsNothing);
+
+    final fifteenthDayAfterDelete = find.text('15');
+    await tester.ensureVisible(fifteenthDayAfterDelete);
+    await tester.pumpAndSettle();
+    await tester.tap(fifteenthDayAfterDelete);
+    await tester.pumpAndSettle();
+
+    expect(find.text('整理书架'), findsOneWidget);
+    expect(find.text('当天没有事项'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('event-marker-2026-7-15')),
+      findsOneWidget,
+    );
+  });
 }
 
 Future<void> _createEvent(
@@ -190,3 +273,5 @@ Future<void> _createEvent(
   await tester.tap(find.text('保存'));
   await tester.pumpAndSettle();
 }
+
+ValueKey<String> _deleteKey(String suffix) => ValueKey('delete-event-$suffix');

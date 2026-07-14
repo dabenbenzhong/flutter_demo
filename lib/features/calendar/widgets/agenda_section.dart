@@ -7,11 +7,13 @@ class AgendaSection extends StatelessWidget {
   const AgendaSection({
     required this.selectedDate,
     required this.events,
+    required this.onDeleteEvent,
     super.key,
   });
 
   final DateTime selectedDate;
   final List<CalendarEvent> events;
+  final ValueChanged<CalendarEvent> onDeleteEvent;
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +39,11 @@ class AgendaSection extends StatelessWidget {
                     child: Column(
                       children: [
                         for (final event in events) ...[
-                          AgendaEventTile(event: event),
-                          if (event != events.last)
-                            const SizedBox(height: 14),
+                          AgendaEventTile(
+                            event: event,
+                            onDelete: () => onDeleteEvent(event),
+                          ),
+                          if (event != events.last) const SizedBox(height: 14),
                         ],
                       ],
                     ),
@@ -54,9 +58,14 @@ class AgendaSection extends StatelessWidget {
 }
 
 class AgendaEventTile extends StatelessWidget {
-  const AgendaEventTile({required this.event, super.key});
+  const AgendaEventTile({
+    required this.event,
+    required this.onDelete,
+    super.key,
+  });
 
   final CalendarEvent event;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +130,16 @@ class AgendaEventTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           _EventIcon(event: event),
-          const SizedBox(width: 18),
+          IconButton(
+            key: ValueKey(
+              'delete-event-${event.date.year}-${event.date.month}-${event.date.day}-${event.time}-${event.title}',
+            ),
+            tooltip: '删除事项',
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline_rounded),
+            color: warmBrown.withValues(alpha: 0.62),
+          ),
+          const SizedBox(width: 6),
         ],
       ),
     );
