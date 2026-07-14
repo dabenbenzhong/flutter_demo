@@ -6,6 +6,7 @@ import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_header.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/event_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
 
 class CalendarHomeScreen extends StatefulWidget {
@@ -54,7 +55,10 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
                   onDateSelected: _selectDate,
                 ),
                 SizedBox(height: 20),
-                AgendaSection(selectedDate: _selectedDate, events: selectedEvents),
+                AgendaSection(
+                  selectedDate: _selectedDate,
+                  events: selectedEvents,
+                ),
                 SizedBox(height: 20),
                 InspirationBanner(),
               ],
@@ -62,7 +66,7 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: const AddEventButton(),
+      floatingActionButton: AddEventButton(onPressed: _showAddEventSheet),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: const CalendarBottomNavigation(),
     );
@@ -71,6 +75,23 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
+    });
+  }
+
+  Future<void> _showAddEventSheet() async {
+    final event = await showModalBottomSheet<CalendarEvent>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => EventFormSheet(selectedDate: _selectedDate),
+    );
+
+    if (event == null) {
+      return;
+    }
+
+    setState(() {
+      _events.add(event);
     });
   }
 }

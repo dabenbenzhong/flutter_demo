@@ -71,8 +71,9 @@ final todayEvents = <CalendarEvent>[
   CalendarEvent(
     date: DateTime(2026, 7, 13),
     time: '09:00',
+    endTime: '09:30',
     title: '团队晨会',
-    detail: '会议室 A · 30分钟',
+    notes: '会议室 A · 30分钟',
     color: blueMarker,
     icon: Icons.groups_rounded,
     iconBackground: Color(0xffeef4ff),
@@ -80,8 +81,9 @@ final todayEvents = <CalendarEvent>[
   CalendarEvent(
     date: DateTime(2026, 7, 13),
     time: '14:00',
+    endTime: '15:00',
     title: '产品评审',
-    detail: '线上会议 · 60分钟',
+    notes: '线上会议 · 60分钟',
     color: purpleMarker,
     icon: Icons.trending_up_rounded,
     iconBackground: Color(0xfff5edff),
@@ -89,8 +91,9 @@ final todayEvents = <CalendarEvent>[
   CalendarEvent(
     date: DateTime(2026, 7, 13),
     time: '19:30',
+    endTime: '20:30',
     title: '健身',
-    detail: '万科健身 · 60分钟',
+    notes: '万科健身 · 60分钟',
     color: greenMarker,
     icon: Icons.fitness_center_rounded,
     iconBackground: Color(0xffeaf8ef),
