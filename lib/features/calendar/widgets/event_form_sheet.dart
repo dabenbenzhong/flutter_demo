@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
+import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 
 class EventFormSheet extends StatefulWidget {
   const EventFormSheet({required this.selectedDate, super.key});
@@ -79,7 +80,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
                 controller: _titleController,
                 decoration: const InputDecoration(labelText: '标题'),
                 textInputAction: TextInputAction.next,
-                validator: _requiredValidator,
+                validator: _requiredTextValidator,
               ),
               const SizedBox(height: 12),
               Row(
@@ -89,7 +90,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
                       controller: _startTimeController,
                       decoration: const InputDecoration(labelText: '开始时间'),
                       textInputAction: TextInputAction.next,
-                      validator: _requiredValidator,
+                      validator: _clockTimeValidator,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -98,7 +99,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
                       controller: _endTimeController,
                       decoration: const InputDecoration(labelText: '结束时间'),
                       textInputAction: TextInputAction.next,
-                      validator: _requiredValidator,
+                      validator: _endTimeValidator,
                     ),
                   ),
                 ],
@@ -143,9 +144,39 @@ class _EventFormSheetState extends State<EventFormSheet> {
     );
   }
 
-  String? _requiredValidator(String? value) {
+  String? _requiredTextValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
       return '请填写';
+    }
+
+    return null;
+  }
+
+  String? _clockTimeValidator(String? value) {
+    final requiredError = _requiredTextValidator(value);
+    if (requiredError != null) {
+      return requiredError;
+    }
+
+    if (parseClockTimeToMinutes(value!) == null) {
+      return '请使用 HH:mm';
+    }
+
+    return null;
+  }
+
+  String? _endTimeValidator(String? value) {
+    final timeError = _clockTimeValidator(value);
+    if (timeError != null) {
+      return timeError;
+    }
+
+    final startMinutes = parseClockTimeToMinutes(_startTimeController.text);
+    final endMinutes = parseClockTimeToMinutes(value!);
+    if (startMinutes != null &&
+        endMinutes != null &&
+        endMinutes <= startMinutes) {
+      return '结束时间必须晚于开始时间';
     }
 
     return null;

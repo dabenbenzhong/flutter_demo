@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_day.dart';
+import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
 
 class CalendarMonthCard extends StatelessWidget {
-  const CalendarMonthCard({this.selectedDate, this.onDateSelected, super.key});
+  const CalendarMonthCard({
+    this.selectedDate,
+    this.onDateSelected,
+    this.events = const [],
+    super.key,
+  });
 
   final DateTime? selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
+  final List<CalendarEvent> events;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +48,21 @@ class CalendarMonthCard extends StatelessWidget {
                 date,
                 effectiveSelectedDate,
               );
+              final eventColors = _eventColorsForDate(date);
 
               return CalendarDayCell(
                 day: day.copyWith(
                   isSelected: isSelected,
                   showSelectionPointer: isSelected,
+                  markerColors: eventColors.isEmpty
+                      ? day.markerColors
+                      : eventColors,
+                  hasEvents: eventColors.isNotEmpty,
+                  eventMarkerKey: eventColors.isNotEmpty
+                      ? ValueKey(
+                          'event-marker-${date.year}-${date.month}-${date.day}',
+                        )
+                      : null,
                 ),
                 onTap: day.isCurrentMonth
                     ? () => onDateSelected?.call(date)
@@ -56,6 +73,20 @@ class CalendarMonthCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<Color> _eventColorsForDate(DateTime date) {
+    final colors = <Color>[];
+    for (final event in events) {
+      if (isSameCalendarDate(event.date, date) && !colors.contains(event.color)) {
+        colors.add(event.color);
+      }
+      if (colors.length == 3) {
+        break;
+      }
+    }
+
+    return colors;
   }
 }
 

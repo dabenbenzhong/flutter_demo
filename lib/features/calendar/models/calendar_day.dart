@@ -10,6 +10,8 @@ class CalendarDay {
     this.isCurrentMonth = true,
     this.isSelected = false,
     this.showSelectionPointer = false,
+    this.hasEvents = false,
+    this.eventMarkerKey,
   });
 
   final int day;
@@ -20,11 +22,15 @@ class CalendarDay {
   final bool isCurrentMonth;
   final bool isSelected;
   final bool showSelectionPointer;
+  final bool hasEvents;
+  final Key? eventMarkerKey;
 
   CalendarDay copyWith({
     List<Color>? markerColors,
     bool? isSelected,
     bool? showSelectionPointer,
+    bool? hasEvents,
+    Key? eventMarkerKey,
   }) {
     return CalendarDay(
       day: day,
@@ -35,6 +41,8 @@ class CalendarDay {
       isCurrentMonth: isCurrentMonth,
       isSelected: isSelected ?? this.isSelected,
       showSelectionPointer: showSelectionPointer ?? this.showSelectionPointer,
+      hasEvents: hasEvents ?? this.hasEvents,
+      eventMarkerKey: eventMarkerKey ?? this.eventMarkerKey,
     );
   }
 }

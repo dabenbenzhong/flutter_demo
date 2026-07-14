@@ -114,4 +114,79 @@ void main() {
     expect(find.text('请填写'), findsNWidgets(3));
     expect(find.text('当天没有事项'), findsOneWidget);
   });
+
+  testWidgets('rejects items whose end time is not after the start time', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const CalendarApp());
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), '午餐');
+    await tester.enterText(find.widgetWithText(TextFormField, '开始时间'), '12:00');
+    await tester.enterText(find.widgetWithText(TextFormField, '结束时间'), '11:30');
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('新增事项'), findsOneWidget);
+    expect(find.text('结束时间必须晚于开始时间'), findsOneWidget);
+    expect(find.text('当天没有事项'), findsOneWidget);
+  });
+
+  testWidgets('sorts same-day items by start time and marks event dates', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const CalendarApp());
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+
+    await _createEvent(
+      tester,
+      title: '下午复盘',
+      startTime: '15:00',
+      endTime: '16:00',
+    );
+    await _createEvent(
+      tester,
+      title: '晨间计划',
+      startTime: '09:00',
+      endTime: '09:30',
+    );
+
+    expect(
+      find.byKey(const ValueKey('event-marker-2026-7-14')),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(find.text('晨间计划')).dy,
+      lessThan(tester.getTopLeft(find.text('下午复盘')).dy),
+    );
+
+    await tester.tap(find.text('15'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('晨间计划'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('event-marker-2026-7-14')),
+      findsOneWidget,
+    );
+  });
+}
+
+Future<void> _createEvent(
+  WidgetTester tester, {
+  required String title,
+  required String startTime,
+  required String endTime,
+}) async {
+  await tester.tap(find.byIcon(Icons.add));
+  await tester.pumpAndSettle();
+
+  await tester.enterText(find.widgetWithText(TextFormField, '标题'), title);
+  await tester.enterText(find.widgetWithText(TextFormField, '开始时间'), startTime);
+  await tester.enterText(find.widgetWithText(TextFormField, '结束时间'), endTime);
+  await tester.tap(find.text('保存'));
+  await tester.pumpAndSettle();
 }

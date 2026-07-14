@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
+import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
@@ -38,7 +39,8 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   Widget build(BuildContext context) {
     final selectedEvents = _events
         .where((event) => isSameCalendarDate(event.date, _selectedDate))
-        .toList();
+        .toList()
+      ..sort(_compareEventsByStartTime);
 
     return Scaffold(
       extendBody: true,
@@ -53,6 +55,7 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
                 CalendarMonthCard(
                   selectedDate: _selectedDate,
                   onDateSelected: _selectDate,
+                  events: _events,
                 ),
                 SizedBox(height: 20),
                 AgendaSection(
@@ -94,6 +97,12 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
       _events.add(event);
     });
   }
+}
+
+int _compareEventsByStartTime(CalendarEvent left, CalendarEvent right) {
+  final leftMinutes = parseClockTimeToMinutes(left.time) ?? 0;
+  final rightMinutes = parseClockTimeToMinutes(right.time) ?? 0;
+  return leftMinutes.compareTo(rightMinutes);
 }
 
 class _CalendarBackground extends StatelessWidget {

@@ -92,7 +92,10 @@ class CalendarDayCell extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _MarkerDots(colors: day.markerColors),
+                _MarkerDots(
+                  colors: day.markerColors,
+                  eventMarkerKey: day.eventMarkerKey,
+                ),
               ],
             ),
           ],
@@ -103,9 +106,10 @@ class CalendarDayCell extends StatelessWidget {
 }
 
 class _MarkerDots extends StatelessWidget {
-  const _MarkerDots({required this.colors});
+  const _MarkerDots({required this.colors, this.eventMarkerKey});
 
   final List<Color> colors;
+  final Key? eventMarkerKey;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +122,7 @@ class _MarkerDots extends StatelessWidget {
       children: [
         for (final color in colors)
           Container(
+            key: color == colors.first ? eventMarkerKey : null,
             width: 6,
             height: 6,
             margin: const EdgeInsets.symmetric(horizontal: 1.5),
