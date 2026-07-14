@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
 
 class CalendarApp extends StatelessWidget {
-  const CalendarApp({super.key});
+  CalendarApp({CalendarEventStore? eventStore, super.key})
+    : eventStore = eventStore ?? MemoryCalendarEventStore();
+
+  final CalendarEventStore eventStore;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,7 @@ class CalendarApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xfff7eee5),
         useMaterial3: true,
       ),
-      home: const CalendarHomeScreen(),
+      home: CalendarHomeScreen(eventStore: eventStore),
     );
   }
 }

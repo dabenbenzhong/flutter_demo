@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
@@ -14,11 +15,13 @@ class CalendarHomeScreen extends StatefulWidget {
   const CalendarHomeScreen({
     this.initialSelectedDate,
     this.initialEvents = const [],
+    this.eventStore,
     super.key,
   });
 
   final DateTime? initialSelectedDate;
   final List<CalendarEvent> initialEvents;
+  final CalendarEventStore? eventStore;
 
   @override
   State<CalendarHomeScreen> createState() => _CalendarHomeScreenState();
@@ -26,13 +29,18 @@ class CalendarHomeScreen extends StatefulWidget {
 
 class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   late DateTime _selectedDate;
+  late final CalendarEventStore _eventStore;
   late final List<CalendarEvent> _events;
+  var _eventMutationVersion = 0;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.initialSelectedDate ?? DateTime(2026, 7, 13);
+    _eventStore =
+        widget.eventStore ?? MemoryCalendarEventStore(widget.initialEvents);
     _events = List.of(widget.initialEvents);
+    _loadStoredEvents();
   }
 
   @override
@@ -96,8 +104,10 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     }
 
     setState(() {
+      _eventMutationVersion++;
       _events.add(event);
     });
+    await _eventStore.saveEvents(_events);
   }
 
   Future<void> _confirmDeleteEvent(CalendarEvent event) async {
@@ -124,7 +134,23 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     }
 
     setState(() {
+      _eventMutationVersion++;
       _events.remove(event);
+    });
+    await _eventStore.saveEvents(_events);
+  }
+
+  Future<void> _loadStoredEvents() async {
+    final loadVersion = _eventMutationVersion;
+    final storedEvents = await _eventStore.loadEvents();
+    if (!mounted || loadVersion != _eventMutationVersion) {
+      return;
+    }
+
+    setState(() {
+      _events
+        ..clear()
+        ..addAll(storedEvents);
     });
   }
 }

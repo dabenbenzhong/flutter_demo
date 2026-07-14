@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_flutter_demo/app.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
+import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
+import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 
 void main() {
   testWidgets('renders the July 2026 calendar dashboard', (tester) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     expect(find.text('2026年7月'), findsOneWidget);
     expect(find.text('今天'), findsOneWidget);
@@ -63,7 +67,7 @@ void main() {
   testWidgets('creates an item for the selected date from the bottom sheet', (
     tester,
   ) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     await tester.tap(find.text('14'));
     await tester.pumpAndSettle();
@@ -102,7 +106,7 @@ void main() {
   testWidgets('requires title and times before creating an item', (
     tester,
   ) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
@@ -118,7 +122,7 @@ void main() {
   testWidgets('rejects items whose end time is not after the start time', (
     tester,
   ) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
@@ -137,7 +141,7 @@ void main() {
   testWidgets('sorts same-day items by start time and marks event dates', (
     tester,
   ) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     await tester.tap(find.text('14'));
     await tester.pumpAndSettle();
@@ -177,7 +181,7 @@ void main() {
   testWidgets('keeps an item when delete confirmation is cancelled', (
     tester,
   ) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     await tester.tap(find.text('14'));
     await tester.pumpAndSettle();
@@ -208,7 +212,7 @@ void main() {
   testWidgets('deletes a confirmed item without affecting other dates', (
     tester,
   ) async {
-    await tester.pumpWidget(const CalendarApp());
+    await tester.pumpWidget(CalendarApp());
 
     await tester.tap(find.text('14'));
     await tester.pumpAndSettle();
@@ -256,6 +260,98 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('persists created items after rebuilding the app', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore();
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await _createEvent(
+      tester,
+      title: '写周报',
+      startTime: '18:00',
+      endTime: '18:30',
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    expect(find.text('写周报'), findsOneWidget);
+    expect(find.text('18:30'), findsOneWidget);
+  });
+
+  testWidgets('persists confirmed deletions after rebuilding the app', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 13),
+        time: '08:00',
+        endTime: '08:30',
+        title: '晨间整理',
+        color: blueMarker,
+        icon: Icons.event_note_rounded,
+        iconBackground: const Color(0xffeef4ff),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    expect(find.text('晨间整理'), findsOneWidget);
+
+    final deleteButton = find.byKey(_deleteKey('2026-7-13-08:00-晨间整理'));
+    await tester.ensureVisible(deleteButton);
+    await tester.pumpAndSettle();
+    await tester.tap(deleteButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    expect(find.text('晨间整理'), findsNothing);
+    expect(find.text('当天没有事项'), findsOneWidget);
+  });
+
+  testWidgets('does not let a late store load overwrite local edits', (
+    tester,
+  ) async {
+    final store = _DelayedCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 13),
+        time: '07:00',
+        endTime: '07:30',
+        title: '旧事项',
+        color: blueMarker,
+        icon: Icons.event_note_rounded,
+        iconBackground: const Color(0xffeef4ff),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+
+    await _createEvent(
+      tester,
+      title: '新事项',
+      startTime: '18:00',
+      endTime: '18:30',
+    );
+
+    store.completeLoad();
+    await tester.pumpAndSettle();
+
+    expect(find.text('新事项'), findsOneWidget);
+    expect(find.text('旧事项'), findsNothing);
+  });
 }
 
 Future<void> _createEvent(
@@ -275,3 +371,23 @@ Future<void> _createEvent(
 }
 
 ValueKey<String> _deleteKey(String suffix) => ValueKey('delete-event-$suffix');
+
+class _DelayedCalendarEventStore implements CalendarEventStore {
+  _DelayedCalendarEventStore(this._loadedEvents);
+
+  final List<CalendarEvent> _loadedEvents;
+  final _loadCompleter = Completer<List<CalendarEvent>>();
+  var savedEvents = <CalendarEvent>[];
+
+  @override
+  Future<List<CalendarEvent>> loadEvents() => _loadCompleter.future;
+
+  @override
+  Future<void> saveEvents(List<CalendarEvent> events) async {
+    savedEvents = List.of(events);
+  }
+
+  void completeLoad() {
+    _loadCompleter.complete(List.of(_loadedEvents));
+  }
+}
