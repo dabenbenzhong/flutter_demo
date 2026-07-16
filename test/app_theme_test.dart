@@ -5,6 +5,7 @@ import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
+import 'package:my_flutter_demo/ui/components/app_components.dart';
 import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 void main() {
@@ -65,6 +66,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(AppConfirmDialog), findsOneWidget);
+
     final confirmButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, '删除'),
     );
@@ -77,5 +80,87 @@ void main() {
       confirmButton.style?.foregroundColor?.resolve(<WidgetState>{}),
       tokens.colors.onDangerAction,
     );
+  });
+
+  testWidgets('shared components are used in real calendar paths', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('日程'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppPageContainer), findsOneWidget);
+    expect(find.byType(AppPageTitle), findsOneWidget);
+    expect(find.byType(AppEmptyState), findsOneWidget);
+    expect(find.text('还没有事项'), findsOneWidget);
+
+    final pageBackground = find
+        .descendant(
+          of: find.byType(AppPageContainer),
+          matching: find.byType(DecoratedBox),
+        )
+        .first;
+    final backgroundDecoration =
+        tester.widget<DecoratedBox>(pageBackground).decoration as BoxDecoration;
+    expect(
+      tester.getSize(pageBackground),
+      tester.getSize(find.byType(Scaffold)),
+    );
+    expect(backgroundDecoration.gradient, isA<LinearGradient>());
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('新增待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppBottomFormShell), findsOneWidget);
+    expect(find.text('新增待办项'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('我的'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppContentCard), findsOneWidget);
+    expect(find.byType(AppStatRow), findsNWidgets(2));
+  });
+
+  testWidgets('bottom form shell keeps content above the bottom safe area', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: MediaQuery(
+          data: const MediaQueryData(viewPadding: EdgeInsets.only(bottom: 28)),
+          child: Scaffold(
+            body: AppBottomFormShell(
+              title: '新增待办项',
+              onSubmit: () {},
+              children: const [
+                TextField(decoration: InputDecoration(labelText: '标题')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final shellPadding =
+        tester
+                .widget<Padding>(
+                  find
+                      .descendant(
+                        of: find.byType(AppBottomFormShell),
+                        matching: find.byType(Padding),
+                      )
+                      .first,
+                )
+                .padding
+            as EdgeInsets;
+
+    expect(shellPadding.bottom, greaterThan(28));
   });
 }

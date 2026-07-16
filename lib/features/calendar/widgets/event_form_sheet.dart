@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
+import 'package:my_flutter_demo/ui/components/app_components.dart';
 
 class EventFormSheet extends StatefulWidget {
   const EventFormSheet({required this.selectedDate, super.key});
@@ -31,116 +32,65 @@ class _EventFormSheetState extends State<EventFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 18,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 18,
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      '新增事项',
-                      style: TextStyle(
-                        color: warmBrown,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: '关闭',
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '日期：${widget.selectedDate.month}月${widget.selectedDate.day}日',
-                style: TextStyle(
-                  color: warmBrown.withValues(alpha: 0.72),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: '标题'),
-                textInputAction: TextInputAction.next,
-                validator: _requiredTextValidator,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _startTimeController,
-                      decoration: const InputDecoration(labelText: '开始时间'),
-                      textInputAction: TextInputAction.next,
-                      validator: _clockTimeValidator,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _endTimeController,
-                      decoration: const InputDecoration(labelText: '结束时间'),
-                      textInputAction: TextInputAction.next,
-                      validator: _endTimeValidator,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(labelText: '备注'),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final option in _eventColorOptions)
-                    ChoiceChip(
-                      label: Text(option.label),
-                      selected: option == _selectedColor,
-                      avatar: CircleAvatar(backgroundColor: option.color),
-                      onSelected: (_) {
-                        setState(() {
-                          _selectedColor = option;
-                        });
-                      },
-                    ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _save,
-                  icon: const Icon(Icons.check_rounded),
-                  label: const Text('保存'),
-                ),
-              ),
-            ],
-          ),
+    return AppBottomFormShell(
+      title: '新增事项',
+      subtitle: '日期：${widget.selectedDate.month}月${widget.selectedDate.day}日',
+      formKey: _formKey,
+      onSubmit: _save,
+      children: [
+        TextFormField(
+          controller: _titleController,
+          decoration: const InputDecoration(labelText: '标题'),
+          textInputAction: TextInputAction.next,
+          validator: _requiredTextValidator,
         ),
-      ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _startTimeController,
+                decoration: const InputDecoration(labelText: '开始时间'),
+                textInputAction: TextInputAction.next,
+                validator: _clockTimeValidator,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _endTimeController,
+                decoration: const InputDecoration(labelText: '结束时间'),
+                textInputAction: TextInputAction.next,
+                validator: _endTimeValidator,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _notesController,
+          decoration: const InputDecoration(labelText: '备注'),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in _eventColorOptions)
+              ChoiceChip(
+                label: Text(option.label),
+                selected: option == _selectedColor,
+                avatar: CircleAvatar(backgroundColor: option.color),
+                onSelected: (_) {
+                  setState(() {
+                    _selectedColor = option;
+                  });
+                },
+              ),
+          ],
+        ),
+      ],
     );
   }
 

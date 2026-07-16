@@ -3,18 +3,17 @@ import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
-import 'package:my_flutter_demo/features/calendar/widgets/event_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
-import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_header.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/event_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/todo_form_sheet.dart';
-import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
+import 'package:my_flutter_demo/ui/components/app_components.dart';
 
 class CalendarHomeScreen extends StatefulWidget {
   const CalendarHomeScreen({
@@ -63,7 +62,7 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
 
     return Scaffold(
       extendBody: true,
-      body: _CalendarBackground(child: _buildSelectedPage(selectedEvents)),
+      body: _buildSelectedPage(selectedEvents),
       floatingActionButton: _selectedTabIndex == 0
           ? AddEventButton(onPressed: _showAddEventSheet)
           : null,
@@ -254,33 +253,12 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     required Widget content,
     required String confirmLabel,
   }) async {
-    final confirmed = await showDialog<bool>(
+    return showAppConfirmDialog(
       context: context,
-      builder: (dialogContext) {
-        final tokens = dialogContext.appTheme;
-
-        return AlertDialog(
-          title: Text(title),
-          content: content,
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: tokens.colors.dangerAction,
-                foregroundColor: tokens.colors.onDangerAction,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(confirmLabel),
-            ),
-          ],
-        );
-      },
+      title: title,
+      content: content,
+      confirmLabel: confirmLabel,
     );
-
-    return confirmed == true;
   }
 
   Future<void> _saveCurrentData() async {
@@ -344,7 +322,7 @@ class _CalendarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PageContainer(
+    return AppPageContainer(
       child: Column(
         children: [
           CalendarHeader(
@@ -387,40 +365,20 @@ class _SchedulePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final sortedEvents = List.of(events)..sort(_compareEventsByDateTime);
 
-    return _PageContainer(
+    return AppPageContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _PageTitle(title: '日程', subtitle: '按日期查看全部本地事项'),
+          const AppPageTitle(title: '日程', subtitle: '按日期查看全部本地事项'),
           const SizedBox(height: 14),
           if (sortedEvents.isEmpty)
-            AppGlassCard(
-              padding: const EdgeInsets.fromLTRB(20, 30, 20, 28),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.event_available_rounded,
-                    color: caramel,
-                    size: 36,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '还没有事项',
-                    style: TextStyle(
-                      color: warmBrown,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  FilledButton.icon(
-                    onPressed: onGoToCalendar,
-                    icon: const Icon(Icons.calendar_month_rounded),
-                    label: const Text('去日历页添加'),
-                  ),
-                ],
-              ),
+            AppEmptyState(
+              icon: Icons.event_available_rounded,
+              title: '还没有事项',
+              description: '去日历页添加一个事项后，会在这里按日期汇总。',
+              actionLabel: '去日历页添加',
+              actionIcon: Icons.calendar_month_rounded,
+              onAction: onGoToCalendar,
             )
           else
             for (final group in _groupEventsByDate(sortedEvents)) ...[
@@ -454,36 +412,20 @@ class _TodoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final sortedTodos = List.of(todos)..sort(_compareTodos);
 
-    return _PageContainer(
+    return AppPageContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _PageTitle(title: '待办', subtitle: '管理轻量清单'),
+          const AppPageTitle(title: '待办', subtitle: '管理轻量清单'),
           const SizedBox(height: 14),
           if (sortedTodos.isEmpty)
-            AppGlassCard(
-              padding: const EdgeInsets.fromLTRB(20, 30, 20, 28),
-              child: Column(
-                children: [
-                  const Icon(Icons.check_box_rounded, color: caramel, size: 36),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '还没有待办',
-                    style: TextStyle(
-                      color: warmBrown,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  FilledButton.icon(
-                    onPressed: onAddTodo,
-                    icon: const Icon(Icons.add_task_rounded),
-                    label: const Text('新增待办'),
-                  ),
-                ],
-              ),
+            AppEmptyState(
+              icon: Icons.check_box_rounded,
+              title: '还没有待办',
+              description: '新增轻量清单后，可以在这里切换完成状态。',
+              actionLabel: '新增待办',
+              actionIcon: Icons.add_task_rounded,
+              onAction: onAddTodo,
             )
           else ...[
             Align(
@@ -523,7 +465,7 @@ class _TodoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
+    return AppContentCard(
       padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
       child: Row(
         children: [
@@ -594,13 +536,13 @@ class _ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PageContainer(
+    return AppPageContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _PageTitle(title: '我的', subtitle: '本地应用信息'),
+          const AppPageTitle(title: '我的', subtitle: '本地应用信息'),
           const SizedBox(height: 14),
-          AppGlassCard(
+          AppContentCard(
             padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,9 +568,9 @@ class _ProfilePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                _StatRow(label: '事项数量', value: eventCount),
+                AppStatRow(label: '事项数量', value: eventCount),
                 const SizedBox(height: 10),
-                _StatRow(label: '待办项数量', value: todoCount),
+                AppStatRow(label: '待办项数量', value: todoCount),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -647,101 +589,6 @@ class _ProfilePage extends StatelessWidget {
   }
 }
 
-class _PageContainer extends StatelessWidget {
-  const _PageContainer({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 430),
-        child: SafeArea(
-          bottom: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 96),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PageTitle extends StatelessWidget {
-  const _PageTitle({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: warmBrown,
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: TextStyle(
-              color: warmBrown.withValues(alpha: 0.72),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatRow extends StatelessWidget {
-  const _StatRow({required this.label, required this.value});
-
-  final String label;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: warmBrown,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0,
-            ),
-          ),
-        ),
-        Text(
-          '$value',
-          style: const TextStyle(
-            color: caramel,
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _ScheduleDateGroup extends StatelessWidget {
   const _ScheduleDateGroup({
     required this.date,
@@ -755,7 +602,7 @@ class _ScheduleDateGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
+    return AppContentCard(
       padding: const EdgeInsets.fromLTRB(18, 16, 14, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -860,66 +707,4 @@ int _compareEventsByDateTime(CalendarEvent left, CalendarEvent right) {
   }
 
   return _compareEventsByStartTime(left, right);
-}
-
-class _CalendarBackground extends StatelessWidget {
-  const _CalendarBackground({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xfffff1df), Color(0xfff8eadc), Color(0xfff3e6dc)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: CustomPaint(painter: _SoftBackgroundPainter()),
-          ),
-          Positioned.fill(child: child),
-        ],
-      ),
-    );
-  }
-}
-
-class _SoftBackgroundPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final glowPaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 42);
-
-    glowPaint.color = Colors.white.withValues(alpha: 0.72);
-    canvas.drawCircle(
-      Offset(size.width * 0.28, size.height * 0.18),
-      116,
-      glowPaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.78, size.height * 0.34),
-      96,
-      glowPaint,
-    );
-
-    glowPaint.color = const Color(0xffd8a467).withValues(alpha: 0.18);
-    canvas.drawCircle(
-      Offset(size.width * 0.66, size.height * 0.12),
-      110,
-      glowPaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.18, size.height * 0.8),
-      120,
-      glowPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

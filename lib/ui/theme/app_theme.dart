@@ -165,7 +165,9 @@ abstract final class AppTheme {
 }
 
 extension AppThemeLookup on BuildContext {
-  AppThemeTokens get appTheme => Theme.of(this).extension<AppThemeTokens>()!;
+  AppThemeTokens get appTheme =>
+      Theme.of(this).extension<AppThemeTokens>() ??
+      const AppThemeTokens.light();
 }
 
 @immutable
