@@ -128,7 +128,6 @@ abstract final class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: tokens.colors.surface.withValues(alpha: 0.94),
         elevation: 0,
-        height: 64,
         indicatorColor: tokens.colors.primaryAction.withValues(alpha: 0.12),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);

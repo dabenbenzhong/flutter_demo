@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
+const double appPageMaxWidth = 430;
+const double appBottomNavigationHeight = 64;
+const double appFloatingActionButtonSize = 64;
+
 class AppPageContainer extends StatelessWidget {
-  const AppPageContainer({required this.child, this.maxWidth = 430, super.key});
+  const AppPageContainer({
+    required this.child,
+    this.maxWidth = appPageMaxWidth,
+    super.key,
+  });
 
   final Widget child;
   final double maxWidth;
@@ -10,6 +18,9 @@ class AppPageContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.appTheme;
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    final bottomInset =
+        appBottomNavigationHeight + viewPadding.bottom + tokens.spacing.xl;
     final backgroundEnd = Color.lerp(
       tokens.colors.background,
       tokens.colors.surfaceMuted,
@@ -34,7 +45,7 @@ class AppPageContainer extends StatelessWidget {
                 tokens.spacing.sm,
                 0,
                 tokens.spacing.sm,
-                96,
+                bottomInset,
               ),
               child: child,
             ),
