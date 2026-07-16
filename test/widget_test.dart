@@ -12,6 +12,62 @@ import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 
 void main() {
+  testWidgets('bottom navigation opens four pages and preserves calendar state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('日程'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('还没有事项'), findsOneWidget);
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('还没有待办'), findsOneWidget);
+
+    await tester.tap(find.text('我的'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('事项数量'), findsOneWidget);
+
+    await tester.tap(find.text('日历').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('selected-day-14')), findsOneWidget);
+  });
+
+  testWidgets('calendar month controls keep selected day valid', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.text('31'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2026年8月'), findsOneWidget);
+    expect(find.byKey(const ValueKey('selected-day-31')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2026年9月'), findsOneWidget);
+    expect(find.byKey(const ValueKey('selected-day-30')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('上个月'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2026年8月'), findsOneWidget);
+    expect(find.byKey(const ValueKey('selected-day-30')), findsOneWidget);
+  });
+
   testWidgets('renders the July 2026 calendar dashboard', (tester) async {
     await tester.pumpWidget(CalendarApp());
 
@@ -391,22 +447,27 @@ Future<void> _createEvent(
 
 ValueKey<String> _deleteKey(String suffix) => ValueKey('delete-event-$suffix');
 
-class _DelayedCalendarEventStore implements CalendarEventStore {
+class _DelayedCalendarEventStore extends CalendarEventStore {
   _DelayedCalendarEventStore(this._loadedEvents);
 
   final List<CalendarEvent> _loadedEvents;
-  final _loadCompleter = Completer<List<CalendarEvent>>();
+  final _loadCompleter = Completer<LocalCalendarData>();
   var savedEvents = <CalendarEvent>[];
 
   @override
-  Future<List<CalendarEvent>> loadEvents() => _loadCompleter.future;
+  Future<LocalCalendarData> loadData() => _loadCompleter.future;
 
   @override
-  Future<void> saveEvents(List<CalendarEvent> events) async {
-    savedEvents = List.of(events);
+  Future<void> saveData(LocalCalendarData data) async {
+    savedEvents = List.of(data.events);
+  }
+
+  @override
+  Future<void> clearData() async {
+    savedEvents = [];
   }
 
   void completeLoad() {
-    _loadCompleter.complete(List.of(_loadedEvents));
+    _loadCompleter.complete(LocalCalendarData(events: _loadedEvents));
   }
 }

@@ -3,63 +3,131 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
+import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
+
+class LocalCalendarData {
+  LocalCalendarData({
+    List<CalendarEvent> events = const [],
+    List<TodoItem> todos = const [],
+  }) : events = List.of(events),
+       todos = List.of(todos);
+
+  final List<CalendarEvent> events;
+  final List<TodoItem> todos;
+
+  int get eventCount => events.length;
+
+  int get todoCount => todos.length;
+
+  LocalCalendarData copyWith({
+    List<CalendarEvent>? events,
+    List<TodoItem>? todos,
+  }) {
+    return LocalCalendarData(
+      events: events ?? this.events,
+      todos: todos ?? this.todos,
+    );
+  }
+}
 
 abstract class CalendarEventStore {
-  Future<List<CalendarEvent>> loadEvents();
+  Future<LocalCalendarData> loadData();
 
-  Future<void> saveEvents(List<CalendarEvent> events);
-}
+  Future<void> saveData(LocalCalendarData data);
 
-class MemoryCalendarEventStore implements CalendarEventStore {
-  MemoryCalendarEventStore([List<CalendarEvent> initialEvents = const []])
-    : _events = List.of(initialEvents);
+  Future<void> clearData();
 
-  var _events = <CalendarEvent>[];
-
-  @override
   Future<List<CalendarEvent>> loadEvents() async {
-    return List.of(_events);
+    return (await loadData()).events;
   }
 
-  @override
   Future<void> saveEvents(List<CalendarEvent> events) async {
-    _events = List.of(events);
+    final data = await loadData();
+    await saveData(data.copyWith(events: events));
+  }
+
+  Future<List<TodoItem>> loadTodos() async {
+    return (await loadData()).todos;
+  }
+
+  Future<void> saveTodos(List<TodoItem> todos) async {
+    final data = await loadData();
+    await saveData(data.copyWith(todos: todos));
   }
 }
 
-class FileCalendarEventStore implements CalendarEventStore {
+class MemoryCalendarEventStore extends CalendarEventStore {
+  MemoryCalendarEventStore([
+    List<CalendarEvent> initialEvents = const [],
+    List<TodoItem> initialTodos = const [],
+  ]) : _data = LocalCalendarData(events: initialEvents, todos: initialTodos);
+
+  var _data = LocalCalendarData();
+
+  @override
+  Future<LocalCalendarData> loadData() async {
+    return LocalCalendarData(events: _data.events, todos: _data.todos);
+  }
+
+  @override
+  Future<void> saveData(LocalCalendarData data) async {
+    _data = LocalCalendarData(events: data.events, todos: data.todos);
+  }
+
+  @override
+  Future<void> clearData() async {
+    _data = LocalCalendarData();
+  }
+}
+
+class FileCalendarEventStore extends CalendarEventStore {
   FileCalendarEventStore({File? file}) : _file = file ?? File(_defaultPath());
 
   final File _file;
 
   @override
-  Future<List<CalendarEvent>> loadEvents() async {
+  Future<LocalCalendarData> loadData() async {
     if (!await _file.exists()) {
-      return [];
+      return LocalCalendarData();
     }
 
     try {
       final decoded = jsonDecode(await _file.readAsString());
-      if (decoded is! List<dynamic>) {
-        return [];
+      if (decoded is List<dynamic>) {
+        return LocalCalendarData(events: _eventsFromJsonList(decoded));
       }
 
-      return [
-        for (final item in decoded)
-          if (item is Map<String, dynamic>) _eventFromJson(item),
-      ];
+      if (decoded is! Map<String, dynamic>) {
+        return LocalCalendarData();
+      }
+
+      final eventsJson = decoded['events'];
+      final todosJson = decoded['todos'];
+
+      return LocalCalendarData(
+        events: eventsJson is List<dynamic> ? _eventsFromJsonList(eventsJson) : [],
+        todos: todosJson is List<dynamic> ? _todosFromJsonList(todosJson) : [],
+      );
     } on FormatException {
-      return [];
+      return LocalCalendarData();
     }
   }
 
   @override
-  Future<void> saveEvents(List<CalendarEvent> events) async {
+  Future<void> saveData(LocalCalendarData data) async {
     await _file.parent.create(recursive: true);
-    final encoded = jsonEncode([
-      for (final event in events) _eventToJson(event),
-    ]);
+    final encoded = jsonEncode({
+      'events': [for (final event in data.events) _eventToJson(event)],
+      'todos': [for (final todo in data.todos) _todoToJson(todo)],
+    });
     await _file.writeAsString(encoded);
+  }
+
+  @override
+  Future<void> clearData() async {
+    if (await _file.exists()) {
+      await _file.delete();
+    }
   }
 
   static String _defaultPath() {
@@ -73,6 +141,20 @@ class FileCalendarEventStore implements CalendarEventStore {
       'calendar_events.json',
     ].join(Platform.pathSeparator);
   }
+}
+
+List<CalendarEvent> _eventsFromJsonList(List<dynamic> items) {
+  return [
+    for (final item in items)
+      if (item is Map<String, dynamic>) _eventFromJson(item),
+  ];
+}
+
+List<TodoItem> _todosFromJsonList(List<dynamic> items) {
+  return [
+    for (final item in items)
+      if (item is Map<String, dynamic>) _todoFromJson(item),
+  ];
 }
 
 Map<String, Object?> _eventToJson(CalendarEvent event) {
@@ -108,9 +190,34 @@ CalendarEvent _eventFromJson(Map<String, dynamic> json) {
   );
 }
 
+Map<String, Object?> _todoToJson(TodoItem todo) {
+  return {
+    'title': todo.title,
+    'notes': todo.notes,
+    'isCompleted': todo.isCompleted,
+    'createdAt': todo.createdAt.toIso8601String(),
+  };
+}
+
+TodoItem _todoFromJson(Map<String, dynamic> json) {
+  return TodoItem(
+    title: _readString(json, 'title'),
+    notes: _readString(json, 'notes'),
+    isCompleted: _readBool(json, 'isCompleted'),
+    createdAt:
+        DateTime.tryParse(_readString(json, 'createdAt')) ??
+        DateTime.fromMillisecondsSinceEpoch(0),
+  );
+}
+
 int _readInt(Map<String, dynamic> json, String key, int fallback) {
   final value = json[key];
   return value is int ? value : fallback;
+}
+
+bool _readBool(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  return value is bool ? value : false;
 }
 
 String _readString(
