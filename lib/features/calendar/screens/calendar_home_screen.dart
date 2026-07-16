@@ -12,6 +12,7 @@ import 'package:my_flutter_demo/features/calendar/widgets/calendar_header.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/todo_form_sheet.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 
@@ -255,20 +256,28 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   }) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: content,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        final tokens = dialogContext.appTheme;
+
+        return AlertDialog(
+          title: Text(title),
+          content: content,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: tokens.colors.dangerAction,
+                foregroundColor: tokens.colors.onDangerAction,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
     );
 
     return confirmed == true;

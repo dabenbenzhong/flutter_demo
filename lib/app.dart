@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class CalendarApp extends StatelessWidget {
   CalendarApp({CalendarEventStore? eventStore, super.key})
@@ -13,15 +14,7 @@ class CalendarApp extends StatelessWidget {
     return MaterialApp(
       title: '日历',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xffc47d35),
-          brightness: Brightness.light,
-        ),
-        fontFamily: 'sans',
-        scaffoldBackgroundColor: const Color(0xfff7eee5),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
       home: CalendarHomeScreen(eventStore: eventStore),
     );
   }
