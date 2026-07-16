@@ -13,48 +13,90 @@ class InspirationBanner extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(tokens.radii.card),
-        child: SizedBox(
-          height: 116,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: CustomPaint(painter: _BannerPainter(tokens.colors)),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  tokens.spacing.xl,
-                  tokens.spacing.md,
-                  130,
-                  tokens.spacing.sm,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      '每一天，都是更好的自己。',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: tokens.text.cardTitle.copyWith(
-                        color: tokens.colors.textPrimary,
-                        fontWeight: FontWeight.w700,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactWidthThreshold =
+                appPageMaxWidth -
+                appFloatingActionButtonSize -
+                tokens.spacing.sm;
+            final isCompact = constraints.maxWidth < compactWidthThreshold;
+            final bannerHeight = isCompact
+                ? appFloatingActionButtonSize - tokens.spacing.xs
+                : appFloatingActionButtonSize +
+                      tokens.spacing.xxl +
+                      tokens.spacing.sm;
+            final trailingPadding = isCompact
+                ? tokens.spacing.lg
+                : (appFloatingActionButtonSize * 2) + (tokens.spacing.xxs / 2);
+
+            return SizedBox(
+              height: bannerHeight,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _BannerPainter(
+                        tokens.colors,
+                        drawArtwork: !isCompact,
                       ),
                     ),
-                    SizedBox(height: tokens.spacing.xs),
-                    Text(
-                      '一 日程 · 规划 · 专注 · 成长',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tokens.text.helper.copyWith(
-                        color: tokens.colors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      tokens.spacing.xl,
+                      tokens.spacing.md,
+                      trailingPadding,
+                      tokens.spacing.sm,
                     ),
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: isCompact
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                      children: [
+                        if (isCompact)
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '每一天，都是更好的自己。',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: tokens.text.cardTitle.copyWith(
+                                color: tokens.colors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          )
+                        else
+                          Text(
+                            '每一天，都是更好的自己。',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: tokens.text.cardTitle.copyWith(
+                              color: tokens.colors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        if (!isCompact) ...[
+                          SizedBox(height: tokens.spacing.xs),
+                          Text(
+                            '一 日程 · 规划 · 专注 · 成长',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tokens.text.helper.copyWith(
+                              color: tokens.colors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -62,9 +104,10 @@ class InspirationBanner extends StatelessWidget {
 }
 
 class _BannerPainter extends CustomPainter {
-  const _BannerPainter(this.colors);
+  const _BannerPainter(this.colors, {required this.drawArtwork});
 
   final AppColorTokens colors;
+  final bool drawArtwork;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -91,10 +134,12 @@ class _BannerPainter extends CustomPainter {
       glow,
     );
 
-    _drawDesk(canvas, size);
-    _drawBooks(canvas, size);
-    _drawCup(canvas, size);
-    _drawPlant(canvas, size);
+    if (drawArtwork) {
+      _drawDesk(canvas, size);
+      _drawBooks(canvas, size);
+      _drawCup(canvas, size);
+      _drawPlant(canvas, size);
+    }
   }
 
   void _drawDesk(Canvas canvas, Size size) {
@@ -197,6 +242,7 @@ class _BannerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BannerPainter oldDelegate) {
-    return colors != oldDelegate.colors;
+    return colors != oldDelegate.colors ||
+        drawArtwork != oldDelegate.drawArtwork;
   }
 }

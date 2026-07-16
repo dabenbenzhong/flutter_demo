@@ -30,7 +30,8 @@ class AppPageContainer extends StatelessWidget {
           colors: [tokens.colors.background, tokens.colors.surfaceMuted],
         ),
       ),
-      child: Center(
+      child: Align(
+        alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: SafeArea(

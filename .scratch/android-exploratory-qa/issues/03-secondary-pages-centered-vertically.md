@@ -1,6 +1,6 @@
 # 03 — 日程、待办、我的页面内容整体垂直居中，顶部空白过大
 
-Status: ready-for-agent
+Status: resolved
 
 Severity: medium
 
@@ -41,3 +41,18 @@ Severity: medium
 
 ## Comments
 
+### 2026-07-16 修复记录
+
+已修复短内容功能页整体垂直居中的问题。共享 `AppPageContainer` 不再用 `Center` 做垂直居中，而是顶部对齐，日程、待办、我的等页面的标题和主要内容会从顶部安全区域附近开始布局。
+
+验证：
+
+- `flutter test` 通过，39 项测试全部通过。
+- `flutter analyze` 通过，无静态分析问题。
+- 已检查本次修改涉及的中文文本，未发现乱码。
+- Android 设备复测通过，日程页和我的页内容从顶部开始布局，不再落在屏幕中部。
+
+新增证据：
+
+- `.scratch/android-exploratory-qa/artifacts/14-after-layout-fix-schedule.png`
+- `.scratch/android-exploratory-qa/artifacts/15-after-layout-fix-profile.png`

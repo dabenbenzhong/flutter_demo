@@ -350,8 +350,13 @@ class _CalendarPage extends StatelessWidget {
             events: selectedEvents,
             onDeleteEvent: onDeleteEvent,
           ),
-          SizedBox(height: tokens.spacing.md),
-          const InspirationBanner(),
+          SizedBox(height: tokens.spacing.xs),
+          Padding(
+            padding: EdgeInsets.only(
+              right: appFloatingActionButtonSize + tokens.spacing.md,
+            ),
+            child: const InspirationBanner(),
+          ),
         ],
       ),
     );

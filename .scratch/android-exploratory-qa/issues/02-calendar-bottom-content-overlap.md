@@ -1,6 +1,6 @@
 # 02 — 日历页底部导航和浮动按钮遮挡横幅内容
 
-Status: ready-for-agent
+Status: resolved
 
 Severity: medium
 
@@ -34,3 +34,17 @@ Severity: medium
 
 ## Comments
 
+### 2026-07-16 修复记录
+
+已修复日历页底部横幅被底部导航和浮动新增按钮遮挡的问题。页面容器改为顶部对齐；日历页为浮动新增按钮预留横向空间，并在窄屏首屏使用单行紧凑横幅，确保“每一天，都是更好的自己。”完整可读且不被 FAB 覆盖。
+
+验证：
+
+- `flutter test` 通过，39 项测试全部通过。
+- `flutter analyze` 通过，无静态分析问题。
+- 已检查本次修改涉及的中文文本，未发现乱码。
+- Android 设备复测通过，debug APK 安装后清空数据并启动，默认日历页横幅不再被底部导航和浮动新增按钮遮挡。
+
+新增证据：
+
+- `.scratch/android-exploratory-qa/artifacts/13-after-layout-fix-home.png`

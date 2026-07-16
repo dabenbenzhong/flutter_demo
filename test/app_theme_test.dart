@@ -11,6 +11,7 @@ import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
 import 'package:my_flutter_demo/ui/components/app_components.dart';
 import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
@@ -498,6 +499,70 @@ void main() {
     }
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('calendar page keeps banner clear of bottom chrome', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 760));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(CalendarApp());
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(CalendarHomeScreen));
+    final tokens = context.appTheme;
+    final bannerRect = tester.getRect(find.byType(InspirationBanner));
+    final bannerTitleRect = tester.getRect(find.text('每一天，都是更好的自己。'));
+    final navigationRect = tester.getRect(
+      find.byType(CalendarBottomNavigation),
+    );
+    final actionRect = tester.getRect(find.byType(AddEventButton));
+    final bannerTitle = tester.widget<Text>(find.text('每一天，都是更好的自己。'));
+
+    expect(
+      bannerRect.bottom,
+      lessThanOrEqualTo(navigationRect.top - tokens.spacing.sm),
+      reason: 'banner=$bannerRect navigation=$navigationRect',
+    );
+    expect(
+      actionRect.bottom,
+      lessThanOrEqualTo(navigationRect.top),
+      reason: 'action=$actionRect navigation=$navigationRect',
+    );
+    expect(
+      actionRect.overlaps(bannerRect),
+      isFalse,
+      reason: 'action=$actionRect banner=$bannerRect',
+    );
+    expect(bannerTitle.overflow, isNull);
+    expect(bannerTitleRect.left, greaterThanOrEqualTo(bannerRect.left));
+    expect(bannerTitleRect.right, lessThanOrEqualTo(bannerRect.right));
+  });
+
+  testWidgets('secondary pages start near the top on short content', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(393, 852));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(CalendarApp());
+    await tester.pumpAndSettle();
+
+    for (final label in ['日程', '待办', '我的']) {
+      await tester.tap(_navigationLabel(label));
+      await tester.pumpAndSettle();
+
+      final title = find
+          .descendant(of: find.byType(AppPageTitle), matching: find.text(label))
+          .first;
+
+      expect(
+        tester.getTopLeft(title).dy,
+        lessThan(96),
+        reason: '$label page title should not be vertically centered',
+      );
+    }
   });
 
   testWidgets('visual system pages avoid narrow mobile overflows', (

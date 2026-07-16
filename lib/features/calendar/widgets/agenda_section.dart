@@ -324,7 +324,7 @@ class _EmptyAgendaState extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: tokens.spacing.xl),
+      padding: EdgeInsets.symmetric(vertical: tokens.spacing.lg),
       decoration: BoxDecoration(
         color: tokens.colors.surfaceMuted.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(tokens.radii.control),
