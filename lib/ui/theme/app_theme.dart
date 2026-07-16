@@ -45,7 +45,7 @@ abstract final class AppTheme {
             vertical: tokens.spacing.sm,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(tokens.radii.control),
+            borderRadius: BorderRadius.circular(tokens.radii.pill),
           ),
           textStyle: tokens.text.button,
         ),
@@ -62,7 +62,7 @@ abstract final class AppTheme {
             vertical: tokens.spacing.sm,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(tokens.radii.control),
+            borderRadius: BorderRadius.circular(tokens.radii.pill),
           ),
           textStyle: tokens.text.button,
         ),
@@ -78,7 +78,7 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
-        fillColor: tokens.colors.surface,
+        fillColor: tokens.colors.surface.withValues(alpha: 0.72),
         labelStyle: tokens.text.helper.copyWith(
           color: tokens.colors.textSecondary,
         ),
@@ -91,7 +91,7 @@ abstract final class AppTheme {
         ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: tokens.spacing.md,
-          vertical: tokens.spacing.sm,
+          vertical: tokens.spacing.xs,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(tokens.radii.control),
@@ -181,12 +181,12 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
 
   const AppThemeTokens.light()
     : colors = const AppColorTokens(
-        background: Color(0xfff7eee5),
-        surface: Color(0xfffffbf6),
-        surfaceMuted: Color(0xfff3e6dc),
+        background: Color(0xfffff2e4),
+        surface: Color(0xfffff8f1),
+        surfaceMuted: Color(0xfff2e3d8),
         textPrimary: Color(0xff2e1608),
         textSecondary: Color(0xb82e1608),
-        border: Color(0xffe0d3c7),
+        border: Color(0x38c9823a),
         primaryAction: Color(0xffc9823a),
         onPrimaryAction: Color(0xffffffff),
         dangerAction: Color(0xffb94731),
@@ -207,13 +207,13 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
         sectionTitle: TextStyle(
           color: Color(0xff2e1608),
           fontSize: 18,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           letterSpacing: 0,
         ),
         cardTitle: TextStyle(
           color: Color(0xff2e1608),
-          fontSize: 17,
-          fontWeight: FontWeight.w800,
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
           letterSpacing: 0,
         ),
         body: TextStyle(
@@ -259,32 +259,37 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       radii = const AppRadiusTokens(
         xs: 4,
         sm: 8,
-        control: 10,
-        card: 8,
+        control: 14,
+        card: 28,
         dialog: 18,
-        sheet: 22,
+        sheet: 28,
         pill: 999,
       ),
       shadows = const AppShadowTokens(
         card: [
           BoxShadow(
             color: Color(0x1f4c2d18),
-            blurRadius: 18,
-            offset: Offset(0, 8),
+            blurRadius: 30,
+            offset: Offset(0, 18),
+          ),
+          BoxShadow(
+            color: Color(0x80ffffff),
+            blurRadius: 12,
+            offset: Offset(-6, -6),
           ),
         ],
         navigation: [
           BoxShadow(
-            color: Color(0x174c2d18),
-            blurRadius: 24,
-            offset: Offset(0, 10),
+            color: Color(0x144c2d18),
+            blurRadius: 22,
+            offset: Offset(0, -8),
           ),
         ],
         floating: [
           BoxShadow(
-            color: Color(0x42c9823a),
+            color: Color(0x6bc9823a),
             blurRadius: 18,
-            offset: Offset(0, 8),
+            offset: Offset(0, 10),
           ),
         ],
       );

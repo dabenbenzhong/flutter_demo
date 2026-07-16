@@ -35,7 +35,7 @@ class CalendarDayCell extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: SizedBox(
-        height: 48,
+        height: 47,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.topCenter,
@@ -43,11 +43,14 @@ class CalendarDayCell extends StatelessWidget {
             if (day.showSelectionPointer)
               Positioned(
                 left: -6,
-                top: 13,
-                child: Icon(
-                  Icons.play_arrow_rounded,
-                  color: tokens.colors.primaryAction,
-                  size: 15,
+                top: 18,
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: tokens.colors.primaryAction,
+                    borderRadius: BorderRadius.circular(tokens.radii.xs - 1),
+                  ),
                 ),
               ),
             if (day.isSelected)
@@ -55,8 +58,8 @@ class CalendarDayCell extends StatelessWidget {
                 top: 4,
                 child: Container(
                   key: ValueKey('selected-day-${day.day}'),
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: tokens.colors.primaryAction,
@@ -74,6 +77,7 @@ class CalendarDayCell extends StatelessWidget {
                   style: tokens.text.cardTitle.copyWith(
                     color: day.isSelected ? selectedTextColor : textColor,
                     height: 1.05,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

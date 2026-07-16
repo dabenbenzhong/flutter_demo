@@ -24,11 +24,15 @@ class AddEventButton extends StatelessWidget {
             width: appFloatingActionButtonSize,
             height: appFloatingActionButtonSize,
             decoration: BoxDecoration(
-              color: tokens.colors.primaryAction,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xffdfa157), Color(0xffb86f30)],
+              ),
               shape: BoxShape.circle,
               border: Border.all(
-                color: tokens.colors.surface.withValues(alpha: 0.84),
-                width: 1.5,
+                color: Colors.white.withValues(alpha: 0.55),
+                width: 1.33,
               ),
               boxShadow: tokens.shadows.floating,
             ),

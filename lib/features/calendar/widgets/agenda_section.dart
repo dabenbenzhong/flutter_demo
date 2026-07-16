@@ -83,9 +83,16 @@ class AgendaEventTile extends StatelessWidget {
     return Container(
       height: 74,
       decoration: BoxDecoration(
-        color: tokens.colors.surfaceMuted.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(tokens.radii.control),
-        border: Border.all(color: tokens.colors.border),
+        color: Colors.white.withValues(alpha: 0.74),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+        boxShadow: [
+          BoxShadow(
+            color: tokens.colors.textPrimary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -95,8 +102,8 @@ class AgendaEventTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: event.color,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(tokens.radii.control),
-                bottomLeft: Radius.circular(tokens.radii.control),
+                topLeft: const Radius.circular(16),
+                bottomLeft: const Radius.circular(16),
               ),
             ),
           ),
@@ -112,6 +119,7 @@ class AgendaEventTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: tokens.text.cardTitle.copyWith(
                     color: tokens.colors.textPrimary,
+                    fontSize: 18,
                   ),
                 ),
                 SizedBox(height: tokens.spacing.xxs + 2),
@@ -370,7 +378,13 @@ class _EventIcon extends StatelessWidget {
       decoration: BoxDecoration(
         color: event.iconBackground,
         borderRadius: BorderRadius.circular(tokens.radii.control),
-        border: Border.all(color: tokens.colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: event.color.withValues(alpha: 0.16),
+            blurRadius: 12,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Icon(event.icon, color: event.color, size: 25),
     );

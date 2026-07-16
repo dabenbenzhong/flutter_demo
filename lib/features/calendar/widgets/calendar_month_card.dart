@@ -28,10 +28,10 @@ class CalendarMonthCard extends StatelessWidget {
 
     return AppContentCard(
       padding: EdgeInsets.fromLTRB(
-        tokens.spacing.md,
-        tokens.spacing.sm,
-        tokens.spacing.md,
-        tokens.spacing.md,
+        tokens.spacing.lg - 1,
+        tokens.spacing.md - 1,
+        tokens.spacing.lg - 1,
+        tokens.spacing.md - 1,
       ),
       child: Column(
         children: [
@@ -46,7 +46,7 @@ class CalendarMonthCard extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              mainAxisExtent: 48,
+              mainAxisExtent: 47,
             ),
             itemBuilder: (context, index) {
               final cell = cells[index];

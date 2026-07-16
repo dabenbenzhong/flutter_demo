@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
-const double appPageMaxWidth = 430;
-const double appBottomNavigationHeight = 64;
+const double appPageMaxWidth = 393;
+const double appBottomNavigationHeight = 82;
 const double appFloatingActionButtonSize = 64;
 
 class AppPageContainer extends StatelessWidget {
@@ -20,19 +20,14 @@ class AppPageContainer extends StatelessWidget {
     final tokens = context.appTheme;
     final viewPadding = MediaQuery.viewPaddingOf(context);
     final bottomInset =
-        appBottomNavigationHeight + viewPadding.bottom + tokens.spacing.xl;
-    final backgroundEnd = Color.lerp(
-      tokens.colors.background,
-      tokens.colors.surfaceMuted,
-      0.72,
-    )!;
+        appBottomNavigationHeight + viewPadding.bottom + tokens.spacing.sm;
 
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [tokens.colors.background, backgroundEnd],
+          colors: [tokens.colors.background, tokens.colors.surfaceMuted],
         ),
       ),
       child: Center(
@@ -111,9 +106,9 @@ class AppContentCard extends StatelessWidget {
       margin: margin,
       padding: padding ?? EdgeInsets.all(tokens.spacing.lg),
       decoration: BoxDecoration(
-        color: tokens.colors.surface,
+        color: tokens.colors.surface.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(tokens.radii.card),
-        border: Border.all(color: tokens.colors.border),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
         boxShadow: tokens.shadows.card,
       ),
       child: child,
@@ -125,7 +120,7 @@ class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     required this.icon,
     required this.title,
-    required this.description,
+    this.description,
     this.actionLabel,
     this.actionIcon,
     this.onAction,
@@ -134,7 +129,7 @@ class AppEmptyState extends StatelessWidget {
 
   final IconData icon;
   final String title;
-  final String description;
+  final String? description;
   final String? actionLabel;
   final IconData? actionIcon;
   final VoidCallback? onAction;
@@ -160,14 +155,16 @@ class AppEmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
             style: tokens.text.sectionTitle,
           ),
-          SizedBox(height: tokens.spacing.xs),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: tokens.text.helper.copyWith(
-              color: tokens.colors.textSecondary,
+          if (description != null) ...[
+            SizedBox(height: tokens.spacing.xs),
+            Text(
+              description!,
+              textAlign: TextAlign.center,
+              style: tokens.text.helper.copyWith(
+                color: tokens.colors.textSecondary,
+              ),
             ),
-          ),
+          ],
           if (actionLabel != null && onAction != null) ...[
             SizedBox(height: tokens.spacing.md),
             FilledButton.icon(
@@ -257,26 +254,64 @@ class AppConfirmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.appTheme;
 
-    return AlertDialog(
-      title: Text(title),
-      content: DefaultTextStyle.merge(
-        style: tokens.text.body.copyWith(color: tokens.colors.textSecondary),
-        child: content,
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: tokens.spacing.xl),
+      backgroundColor: tokens.colors.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(tokens.radii.dialog),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(cancelLabel),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: tokens.colors.dangerAction,
-            foregroundColor: tokens.colors.onDangerAction,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 325),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            tokens.spacing.xl - 2,
+            tokens.spacing.xl - 2,
+            tokens.spacing.xl - 2,
+            tokens.spacing.lg,
           ),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(confirmLabel),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: tokens.text.sectionTitle.copyWith(fontSize: 21),
+              ),
+              SizedBox(height: tokens.spacing.sm),
+              DefaultTextStyle.merge(
+                style: tokens.text.body.copyWith(
+                  color: tokens.colors.textSecondary,
+                ),
+                child: content,
+              ),
+              SizedBox(height: tokens.spacing.lg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(cancelLabel),
+                  ),
+                  SizedBox(width: tokens.spacing.xs),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: tokens.colors.dangerAction,
+                      foregroundColor: tokens.colors.onDangerAction,
+                      minimumSize: const Size(64, 42),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: tokens.spacing.lg - 2,
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(confirmLabel),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -288,8 +323,10 @@ Future<bool> showAppConfirmDialog({
   required String confirmLabel,
   String cancelLabel = '取消',
 }) async {
+  final tokens = context.appTheme;
   final confirmed = await showDialog<bool>(
     context: context,
+    barrierColor: tokens.colors.textPrimary.withValues(alpha: 0.16),
     builder: (context) => AppConfirmDialog(
       title: title,
       content: content,
@@ -335,10 +372,22 @@ class AppBottomFormShell extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text(title, style: tokens.text.sectionTitle)),
+            Expanded(
+              child: Text(
+                title,
+                style: tokens.text.sectionTitle.copyWith(fontSize: 22),
+              ),
+            ),
             IconButton(
               tooltip: '关闭',
               onPressed: () => Navigator.of(context).pop(),
+              style: IconButton.styleFrom(
+                fixedSize: const Size.square(36),
+                backgroundColor: tokens.colors.surface.withValues(alpha: 0.72),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(tokens.radii.dialog),
+                ),
+              ),
               icon: const Icon(Icons.close_rounded),
             ),
           ],
@@ -357,7 +406,8 @@ class AppBottomFormShell extends StatelessWidget {
         SizedBox(height: tokens.spacing.lg),
         SizedBox(
           width: double.infinity,
-          child: ElevatedButton.icon(
+          height: 42,
+          child: FilledButton.icon(
             onPressed: onSubmit,
             icon: Icon(submitIcon),
             label: Text(submitLabel),

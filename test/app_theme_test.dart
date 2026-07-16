@@ -152,40 +152,32 @@ void main() {
 
     expect(
       navigationSurface.color,
-      tokens.colors.surface.withValues(alpha: 0.96),
+      tokens.colors.surface.withValues(alpha: 0.86),
     );
     expect(navigationSurface.boxShadow, tokens.shadows.navigation);
 
-    expect(
-      tester
-          .widget<NavigationBar>(
-            find.descendant(
-              of: navigation,
-              matching: find.byType(NavigationBar),
-            ),
-          )
-          .height,
-      appBottomNavigationHeight,
-    );
+    expect(tester.getSize(navigation).height, appBottomNavigationHeight);
     expect(find.byType(AddEventButton), findsOneWidget);
 
     await tester.tap(_navigationLabel('日程'));
     await tester.pumpAndSettle();
 
     expect(find.text('按日期查看全部本地事项'), findsOneWidget);
-    final labelStyle = Theme.of(context).navigationBarTheme.labelTextStyle!;
     expect(
-      labelStyle.resolve({WidgetState.selected})?.color,
+      _navigationTextStyle(tester, '日程')?.color,
       tokens.colors.primaryAction,
     );
-    expect(labelStyle.resolve({})?.color, tokens.colors.textSecondary);
+    expect(
+      _navigationTextStyle(tester, '日历')?.color,
+      tokens.colors.textSecondary.withValues(alpha: 0.78),
+    );
     expect(
       _navigationIconColor(tester, Icons.format_list_bulleted_rounded),
       tokens.colors.primaryAction,
     );
     expect(
       _navigationIconColor(tester, Icons.calendar_month_rounded),
-      tokens.colors.textSecondary,
+      tokens.colors.textSecondary.withValues(alpha: 0.78),
     );
     expect(find.byType(AddEventButton), findsNothing);
 
@@ -216,8 +208,10 @@ void main() {
     );
 
     expect(actionDecoration.shape, BoxShape.circle);
-    expect(actionDecoration.color, tokens.colors.primaryAction);
-    expect(actionDecoration.gradient, isNull);
+    expect(actionDecoration.color, isNull);
+    expect(actionDecoration.gradient, isA<LinearGradient>());
+    final actionGradient = actionDecoration.gradient! as LinearGradient;
+    expect(actionGradient.colors, const [Color(0xffdfa157), Color(0xffb86f30)]);
     expect(actionDecoration.boxShadow, tokens.shadows.floating);
     expect(actionIcon.color, tokens.colors.onPrimaryAction);
   });
@@ -260,7 +254,7 @@ void main() {
     );
 
     final headerTitle = tester.widget<Text>(find.text('2026年7月'));
-    expect(headerTitle.style?.fontSize, tokens.text.pageTitle.fontSize);
+    expect(headerTitle.style?.fontSize, 31);
     expect(headerTitle.style?.fontWeight, tokens.text.pageTitle.fontWeight);
     expect(headerTitle.style?.color, tokens.colors.textPrimary);
 
@@ -269,11 +263,11 @@ void main() {
     );
     expect(
       previousButton.style?.fixedSize?.resolve(<WidgetState>{}),
-      const Size.square(44),
+      const Size.square(40),
     );
     expect(
       previousButton.style?.backgroundColor?.resolve(<WidgetState>{}),
-      tokens.colors.surface,
+      Colors.white.withValues(alpha: 0.62),
     );
     expect(
       previousButton.style?.foregroundColor?.resolve(<WidgetState>{}),
@@ -281,7 +275,7 @@ void main() {
     );
     expect(
       previousButton.style?.side?.resolve(<WidgetState>{})?.color,
-      tokens.colors.border,
+      Colors.white.withValues(alpha: 0.78),
     );
 
     final selectedDecoration = _containerDecoration(
@@ -471,7 +465,8 @@ void main() {
 
     expect(navigationRect.left, 0);
     expect(navigationRect.right, 320);
-    expect(tester.getSize(find.byType(NavigationBar)).width, 320);
+    expect(tester.getSize(navigation).width, 320);
+    expect(tester.getSize(navigation).height, appBottomNavigationHeight);
 
     const destinations = [
       (label: '日历', icon: Icons.calendar_month_rounded),
@@ -603,7 +598,11 @@ Finder _navigationIcon(IconData icon) {
 }
 
 Color? _navigationIconColor(WidgetTester tester, IconData icon) {
-  return IconTheme.of(tester.element(_navigationIcon(icon))).color;
+  return tester.widget<Icon>(_navigationIcon(icon)).color;
+}
+
+TextStyle? _navigationTextStyle(WidgetTester tester, String label) {
+  return tester.widget<Text>(_navigationLabel(label)).style;
 }
 
 BoxDecoration _decoratedBoxDecoration(WidgetTester tester, Key key) {

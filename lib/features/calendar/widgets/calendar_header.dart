@@ -19,9 +19,9 @@ class CalendarHeader extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        tokens.spacing.md,
-        tokens.spacing.sm,
-        tokens.spacing.md,
+        tokens.spacing.xxs,
+        tokens.spacing.xs - 2,
+        tokens.spacing.xxs,
         tokens.spacing.sm,
       ),
       child: Row(
@@ -42,6 +42,7 @@ class CalendarHeader extends StatelessWidget {
               softWrap: false,
               style: tokens.text.pageTitle.copyWith(
                 color: tokens.colors.textPrimary,
+                fontSize: 31,
               ),
             ),
           ),
@@ -76,13 +77,13 @@ class _MonthIconButton extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        fixedSize: const Size.square(44),
-        backgroundColor: tokens.colors.surface,
+        fixedSize: const Size.square(40),
+        backgroundColor: Colors.white.withValues(alpha: 0.62),
         foregroundColor: tokens.colors.primaryAction,
-        side: BorderSide(color: tokens.colors.border),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(tokens.radii.control),
-        ),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.78)),
+        shape: const CircleBorder(),
+        shadowColor: tokens.colors.textPrimary.withValues(alpha: 0.08),
+        elevation: 4,
       ),
       icon: Icon(icon, size: 24),
     );

@@ -143,10 +143,13 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   }
 
   Future<void> _showAddEventSheet() async {
+    final tokens = context.appTheme;
     final event = await showModalBottomSheet<CalendarEvent>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      barrierColor: tokens.colors.textPrimary.withValues(alpha: 0.16),
+      backgroundColor: tokens.colors.surface.withValues(alpha: 0.96),
       builder: (context) => EventFormSheet(selectedDate: _selectedDate),
     );
 
@@ -180,10 +183,13 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   }
 
   Future<void> _showAddTodoSheet() async {
+    final tokens = context.appTheme;
     final todo = await showModalBottomSheet<TodoItem>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      barrierColor: tokens.colors.textPrimary.withValues(alpha: 0.16),
+      backgroundColor: tokens.colors.surface.withValues(alpha: 0.96),
       builder: (context) => const TodoFormSheet(),
     );
 
@@ -426,7 +432,6 @@ class _TodoPage extends StatelessWidget {
             AppEmptyState(
               icon: Icons.check_box_rounded,
               title: '还没有待办',
-              description: '新增轻量清单后，可以在这里切换完成状态。',
               actionLabel: '新增待办',
               actionIcon: Icons.add_task_rounded,
               onAction: onAddTodo,

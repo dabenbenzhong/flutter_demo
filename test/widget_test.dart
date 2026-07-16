@@ -30,6 +30,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('还没有待办'), findsOneWidget);
+      expect(find.text('新增轻量清单后，可以在这里切换完成状态。'), findsNothing);
 
       await tester.tap(find.text('我的'));
       await tester.pumpAndSettle();
@@ -490,12 +491,14 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(home: CalendarHomeScreen(initialEvents: [todayEvents.first])),
+      MaterialApp(home: CalendarHomeScreen(initialEvents: todayEvents)),
     );
 
     expect(find.byKey(const ValueKey('selected-day-13')), findsOneWidget);
     expect(find.text('7月13日'), findsOneWidget);
-    expect(find.text('团队晨会'), findsOneWidget);
+    for (final event in todayEvents) {
+      expect(find.text(event.title), findsOneWidget);
+    }
     expect(find.text('当天没有事项'), findsNothing);
 
     await tester.tap(find.text('14'));
