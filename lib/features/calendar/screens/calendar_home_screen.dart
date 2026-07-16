@@ -11,6 +11,7 @@ import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_naviga
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_header.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/inspiration_banner.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/todo_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 
@@ -32,6 +33,7 @@ class CalendarHomeScreen extends StatefulWidget {
 
 class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   late DateTime _selectedDate;
+  late DateTime _visibleMonth;
   late final CalendarEventStore _eventStore;
   late final List<CalendarEvent> _events;
   late final List<TodoItem> _todos;
@@ -42,6 +44,7 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   void initState() {
     super.initState();
     _selectedDate = widget.initialSelectedDate ?? DateTime(2026, 7, 13);
+    _visibleMonth = DateTime(_selectedDate.year, _selectedDate.month);
     _eventStore =
         widget.eventStore ?? MemoryCalendarEventStore(widget.initialEvents);
     _events = List.of(widget.initialEvents);
@@ -54,8 +57,8 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     final selectedEvents =
         _events
             .where((event) => isSameCalendarDate(event.date, _selectedDate))
-          .toList()
-        ..sort(_compareEventsByStartTime);
+            .toList()
+          ..sort(_compareEventsByStartTime);
 
     return Scaffold(
       extendBody: true,
@@ -74,10 +77,13 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   Widget _buildSelectedPage(List<CalendarEvent> selectedEvents) {
     return switch (_selectedTabIndex) {
       0 => _CalendarPage(
+        visibleMonth: _visibleMonth,
         selectedDate: _selectedDate,
         selectedEvents: selectedEvents,
         events: _events,
         onDateSelected: _selectDate,
+        onPreviousMonth: () => _changeVisibleMonth(-1),
+        onNextMonth: () => _changeVisibleMonth(1),
         onDeleteEvent: _confirmDeleteEvent,
       ),
       1 => _SchedulePage(
@@ -85,8 +91,17 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
         onGoToCalendar: () => _selectTab(0),
         onDeleteEvent: _confirmDeleteEvent,
       ),
-      2 => _TodoPage(todos: _todos),
-      _ => _ProfilePage(eventCount: _events.length, todoCount: _todos.length),
+      2 => _TodoPage(
+        todos: _todos,
+        onAddTodo: _showAddTodoSheet,
+        onToggleTodo: _toggleTodo,
+        onDeleteTodo: _confirmDeleteTodo,
+      ),
+      _ => _ProfilePage(
+        eventCount: _events.length,
+        todoCount: _todos.length,
+        onClearData: _confirmClearData,
+      ),
     };
   }
 
@@ -99,6 +114,31 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
+      _visibleMonth = DateTime(date.year, date.month);
+    });
+  }
+
+  void _changeVisibleMonth(int offset) {
+    final targetMonth = DateTime(
+      _visibleMonth.year,
+      _visibleMonth.month + offset,
+    );
+    final targetLastDay = DateTime(
+      targetMonth.year,
+      targetMonth.month + 1,
+      0,
+    ).day;
+    final selectedDay = _selectedDate.day > targetLastDay
+        ? targetLastDay
+        : _selectedDate.day;
+
+    setState(() {
+      _visibleMonth = targetMonth;
+      _selectedDate = DateTime(
+        targetMonth.year,
+        targetMonth.month,
+        selectedDay,
+      );
     });
   }
 
@@ -118,29 +158,17 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
       _dataMutationVersion++;
       _events.add(event);
     });
-    await _eventStore.saveData(LocalCalendarData(events: _events, todos: _todos));
+    await _saveCurrentData();
   }
 
   Future<void> _confirmDeleteEvent(CalendarEvent event) async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('删除事项？'),
-        content: Text('确认删除“${event.title}”吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+    final shouldDelete = await _confirmAction(
+      title: '删除事项？',
+      content: Text('确认删除“${event.title}”吗？'),
+      confirmLabel: '删除',
     );
 
-    if (shouldDelete != true) {
+    if (!shouldDelete) {
       return;
     }
 
@@ -148,7 +176,108 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
       _dataMutationVersion++;
       _events.remove(event);
     });
-    await _eventStore.saveData(LocalCalendarData(events: _events, todos: _todos));
+    await _saveCurrentData();
+  }
+
+  Future<void> _showAddTodoSheet() async {
+    final todo = await showModalBottomSheet<TodoItem>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const TodoFormSheet(),
+    );
+
+    if (todo == null) {
+      return;
+    }
+
+    setState(() {
+      _dataMutationVersion++;
+      _todos.add(todo);
+    });
+    await _saveCurrentData();
+  }
+
+  Future<void> _toggleTodo(TodoItem todo) async {
+    final index = _todos.indexOf(todo);
+    if (index == -1) {
+      return;
+    }
+
+    setState(() {
+      _dataMutationVersion++;
+      _todos[index] = todo.copyWith(isCompleted: !todo.isCompleted);
+    });
+    await _saveCurrentData();
+  }
+
+  Future<void> _confirmDeleteTodo(TodoItem todo) async {
+    final shouldDelete = await _confirmAction(
+      title: '删除待办？',
+      content: Text('确认删除“${todo.title}”吗？'),
+      confirmLabel: '删除',
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setState(() {
+      _dataMutationVersion++;
+      _todos.remove(todo);
+    });
+    await _saveCurrentData();
+  }
+
+  Future<void> _confirmClearData() async {
+    final shouldClear = await _confirmAction(
+      title: '清空本地数据？',
+      content: const Text('这会删除当前设备内全部事项和待办项。'),
+      confirmLabel: '清空',
+    );
+
+    if (!shouldClear) {
+      return;
+    }
+
+    setState(() {
+      _dataMutationVersion++;
+      _events.clear();
+      _todos.clear();
+    });
+    await _eventStore.clearData();
+  }
+
+  Future<bool> _confirmAction({
+    required String title,
+    required Widget content,
+    required String confirmLabel,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: content,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed == true;
+  }
+
+  Future<void> _saveCurrentData() async {
+    await _eventStore.saveData(
+      LocalCalendarData(events: _events, todos: _todos),
+    );
   }
 
   Future<void> _loadStoredData() async {
@@ -175,19 +304,33 @@ int _compareEventsByStartTime(CalendarEvent left, CalendarEvent right) {
   return leftMinutes.compareTo(rightMinutes);
 }
 
+int _compareTodos(TodoItem left, TodoItem right) {
+  if (left.isCompleted != right.isCompleted) {
+    return left.isCompleted ? 1 : -1;
+  }
+
+  return right.createdAt.compareTo(left.createdAt);
+}
+
 class _CalendarPage extends StatelessWidget {
   const _CalendarPage({
+    required this.visibleMonth,
     required this.selectedDate,
     required this.selectedEvents,
     required this.events,
     required this.onDateSelected,
+    required this.onPreviousMonth,
+    required this.onNextMonth,
     required this.onDeleteEvent,
   });
 
+  final DateTime visibleMonth;
   final DateTime selectedDate;
   final List<CalendarEvent> selectedEvents;
   final List<CalendarEvent> events;
   final ValueChanged<DateTime> onDateSelected;
+  final VoidCallback onPreviousMonth;
+  final VoidCallback onNextMonth;
   final ValueChanged<CalendarEvent> onDeleteEvent;
 
   @override
@@ -195,8 +338,13 @@ class _CalendarPage extends StatelessWidget {
     return _PageContainer(
       child: Column(
         children: [
-          const CalendarHeader(),
+          CalendarHeader(
+            visibleMonth: visibleMonth,
+            onPreviousMonth: onPreviousMonth,
+            onNextMonth: onNextMonth,
+          ),
           CalendarMonthCard(
+            visibleMonth: visibleMonth,
             selectedDate: selectedDate,
             onDateSelected: onDateSelected,
             events: events,
@@ -281,35 +429,142 @@ class _SchedulePage extends StatelessWidget {
 }
 
 class _TodoPage extends StatelessWidget {
-  const _TodoPage({required this.todos});
+  const _TodoPage({
+    required this.todos,
+    required this.onAddTodo,
+    required this.onToggleTodo,
+    required this.onDeleteTodo,
+  });
 
   final List<TodoItem> todos;
+  final VoidCallback onAddTodo;
+  final ValueChanged<TodoItem> onToggleTodo;
+  final ValueChanged<TodoItem> onDeleteTodo;
 
   @override
   Widget build(BuildContext context) {
+    final sortedTodos = List.of(todos)..sort(_compareTodos);
+
     return _PageContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _PageTitle(title: '待办', subtitle: '管理轻量清单'),
           const SizedBox(height: 14),
-          AppGlassCard(
-            padding: const EdgeInsets.fromLTRB(20, 30, 20, 28),
+          if (sortedTodos.isEmpty)
+            AppGlassCard(
+              padding: const EdgeInsets.fromLTRB(20, 30, 20, 28),
+              child: Column(
+                children: [
+                  const Icon(Icons.check_box_rounded, color: caramel, size: 36),
+                  const SizedBox(height: 12),
+                  const Text(
+                    '还没有待办',
+                    style: TextStyle(
+                      color: warmBrown,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton.icon(
+                    onPressed: onAddTodo,
+                    icon: const Icon(Icons.add_task_rounded),
+                    label: const Text('新增待办'),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: onAddTodo,
+                icon: const Icon(Icons.add_task_rounded),
+                label: const Text('新增待办'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final todo in sortedTodos) ...[
+              _TodoTile(
+                todo: todo,
+                onToggle: () => onToggleTodo(todo),
+                onDelete: () => onDeleteTodo(todo),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TodoTile extends StatelessWidget {
+  const _TodoTile({
+    required this.todo,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  final TodoItem todo;
+  final VoidCallback onToggle;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppGlassCard(
+      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+      child: Row(
+        children: [
+          Checkbox(
+            key: ValueKey('toggle-todo-${todo.createdAt.toIso8601String()}'),
+            value: todo.isCompleted,
+            onChanged: (_) => onToggle(),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.check_box_rounded, color: caramel, size: 36),
-                const SizedBox(height: 12),
                 Text(
-                  todos.isEmpty ? '还没有待办' : '待办项 ${todos.length}',
-                  style: const TextStyle(
+                  todo.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
                     color: warmBrown,
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
+                    decoration: todo.isCompleted
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
                     letterSpacing: 0,
                   ),
                 ),
+                if (todo.notes.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    todo.notes,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: warmBrown.withValues(alpha: 0.68),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
               ],
             ),
+          ),
+          IconButton(
+            key: ValueKey('delete-todo-${todo.createdAt.toIso8601String()}'),
+            tooltip: '删除待办',
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline_rounded),
+            color: warmBrown.withValues(alpha: 0.62),
           ),
         ],
       ),
@@ -318,10 +573,15 @@ class _TodoPage extends StatelessWidget {
 }
 
 class _ProfilePage extends StatelessWidget {
-  const _ProfilePage({required this.eventCount, required this.todoCount});
+  const _ProfilePage({
+    required this.eventCount,
+    required this.todoCount,
+    required this.onClearData,
+  });
 
   final int eventCount;
   final int todoCount;
+  final VoidCallback onClearData;
 
   @override
   Widget build(BuildContext context) {
@@ -360,6 +620,15 @@ class _ProfilePage extends StatelessWidget {
                 _StatRow(label: '事项数量', value: eventCount),
                 const SizedBox(height: 10),
                 _StatRow(label: '待办项数量', value: todoCount),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: onClearData,
+                    icon: const Icon(Icons.delete_sweep_rounded),
+                    label: const Text('清空本地数据'),
+                  ),
+                ),
               ],
             ),
           ),

@@ -6,40 +6,42 @@ import 'package:my_flutter_demo/app.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
+import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 
 void main() {
-  testWidgets('bottom navigation opens four pages and preserves calendar state', (
-    tester,
-  ) async {
-    await tester.pumpWidget(CalendarApp());
+  testWidgets(
+    'bottom navigation opens four pages and preserves calendar state',
+    (tester) async {
+      await tester.pumpWidget(CalendarApp());
 
-    await tester.tap(find.text('14'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('14'));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('日程'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('日程'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('还没有事项'), findsOneWidget);
+      expect(find.text('还没有事项'), findsOneWidget);
 
-    await tester.tap(find.text('待办'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('待办'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('还没有待办'), findsOneWidget);
+      expect(find.text('还没有待办'), findsOneWidget);
 
-    await tester.tap(find.text('我的'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('我的'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('事项数量'), findsOneWidget);
+      expect(find.text('事项数量'), findsOneWidget);
 
-    await tester.tap(find.text('日历').last);
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('日历').last);
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('selected-day-14')), findsOneWidget);
-  });
+      expect(find.byKey(const ValueKey('selected-day-14')), findsOneWidget);
+    },
+  );
 
   testWidgets('calendar month controls keep selected day valid', (
     tester,
@@ -68,11 +70,371 @@ void main() {
     expect(find.byKey(const ValueKey('selected-day-30')), findsOneWidget);
   });
 
+  testWidgets('creates events in the currently displayed month', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('20'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    expect(find.text('日期：8月20日'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), '跨月安排');
+    await tester.enterText(find.widgetWithText(TextFormField, '开始时间'), '10:00');
+    await tester.enterText(find.widgetWithText(TextFormField, '结束时间'), '11:00');
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('跨月安排'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('event-marker-2026-8-20')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byTooltip('上个月'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('跨月安排'), findsNothing);
+    expect(find.byKey(const ValueKey('event-marker-2026-8-20')), findsNothing);
+  });
+
+  testWidgets('todo page creates required-title todos and persists them', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore();
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('还没有待办'), findsOneWidget);
+
+    await tester.tap(find.text('新增待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('新增待办'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, '标题'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, '备注'), findsOneWidget);
+
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), '买菜');
+    await tester.enterText(find.widgetWithText(TextFormField, '备注'), '准备晚餐');
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('买菜'), findsOneWidget);
+    expect(find.text('准备晚餐'), findsOneWidget);
+    expect(find.text('还没有待办'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('买菜'), findsOneWidget);
+    expect(find.text('准备晚餐'), findsOneWidget);
+  });
+
+  testWidgets('todo page toggles sorts and confirms deletion', (tester) async {
+    final oldCreatedAt = DateTime(2026, 7, 14, 9);
+    final newCreatedAt = DateTime(2026, 7, 14, 10);
+    final doneCreatedAt = DateTime(2026, 7, 14, 11);
+    final store = MemoryCalendarEventStore([], [
+      TodoItem(title: '旧待办', createdAt: oldCreatedAt),
+      TodoItem(title: '新待办', createdAt: newCreatedAt),
+      TodoItem(title: '已完成待办', isCompleted: true, createdAt: doneCreatedAt),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('新待办')).dy,
+      lessThan(tester.getTopLeft(find.text('旧待办')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('旧待办')).dy,
+      lessThan(tester.getTopLeft(find.text('已完成待办')).dy),
+    );
+
+    await tester.tap(find.byKey(_todoToggleKey(oldCreatedAt)));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('新待办')).dy,
+      lessThan(tester.getTopLeft(find.text('已完成待办')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('已完成待办')).dy,
+      lessThan(tester.getTopLeft(find.text('旧待办')).dy),
+    );
+
+    await tester.tap(find.byKey(_todoToggleKey(oldCreatedAt)));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('旧待办')).dy,
+      lessThan(tester.getTopLeft(find.text('已完成待办')).dy),
+    );
+
+    await tester.tap(find.byKey(_todoDeleteKey(doneCreatedAt)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('删除待办？'), findsOneWidget);
+    expect(find.text('确认删除“已完成待办”吗？'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('已完成待办'), findsOneWidget);
+
+    await tester.tap(find.byKey(_todoDeleteKey(doneCreatedAt)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('已完成待办'), findsNothing);
+  });
+
+  testWidgets('todo completion state persists after rebuilding the app', (
+    tester,
+  ) async {
+    final oldCreatedAt = DateTime(2026, 7, 14, 11);
+    final newCreatedAt = DateTime(2026, 7, 14, 10);
+    final store = MemoryCalendarEventStore([], [
+      TodoItem(title: '旧待办', createdAt: oldCreatedAt),
+      TodoItem(title: '新待办', createdAt: newCreatedAt),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('旧待办')).dy,
+      lessThan(tester.getTopLeft(find.text('新待办')).dy),
+    );
+
+    await tester.tap(find.byKey(_todoToggleKey(oldCreatedAt)));
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('新待办')).dy,
+      lessThan(tester.getTopLeft(find.text('旧待办')).dy),
+    );
+  });
+
+  testWidgets('schedule page groups sorted events and deletes in shared data', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+    await _createEvent(
+      tester,
+      title: '下午复盘',
+      startTime: '15:00',
+      endTime: '16:00',
+    );
+    await _createEvent(
+      tester,
+      title: '晨间计划',
+      startTime: '09:00',
+      endTime: '09:30',
+    );
+
+    await tester.tap(find.text('15'));
+    await tester.pumpAndSettle();
+    await _createEvent(
+      tester,
+      title: '整理书架',
+      startTime: '16:00',
+      endTime: '17:00',
+    );
+
+    await tester.tap(find.text('日程'));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.add), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('2026年7月14日')).dy,
+      lessThan(tester.getTopLeft(find.text('2026年7月15日')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('晨间计划')).dy,
+      lessThan(tester.getTopLeft(find.text('下午复盘')).dy),
+    );
+
+    await tester.tap(find.byKey(_scheduleDeleteKey('2026-7-14-09:00-晨间计划')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('删除事项？'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('晨间计划'), findsOneWidget);
+
+    await tester.tap(find.byKey(_scheduleDeleteKey('2026-7-14-09:00-晨间计划')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(_scheduleDeleteKey('2026-7-14-15:00-下午复盘')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('日历'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('当天没有事项'), findsOneWidget);
+    expect(find.byKey(const ValueKey('event-marker-2026-7-14')), findsNothing);
+
+    await tester.tap(find.text('15'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('整理书架'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('event-marker-2026-7-15')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('schedule empty state opens calendar page without a form', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.text('日程'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('还没有事项'), findsOneWidget);
+
+    await tester.tap(find.text('去日历页添加'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2026年7月'), findsOneWidget);
+    expect(find.text('当天没有事项'), findsOneWidget);
+    expect(find.text('新增事项'), findsNothing);
+  });
+
+  testWidgets('profile page clears local data and preserves calendar state', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore(
+      [
+        CalendarEvent(
+          date: DateTime(2026, 7, 14),
+          time: '10:00',
+          endTime: '11:00',
+          title: '读书',
+          color: blueMarker,
+          icon: Icons.event_note_rounded,
+          iconBackground: const Color(0xffeef4ff),
+        ),
+      ],
+      [TodoItem(title: '买菜', createdAt: DateTime(2026, 7, 14, 9))],
+    );
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('31'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('我的'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('事项数量'), findsOneWidget);
+    expect(find.text('待办项数量'), findsOneWidget);
+    expect(find.text('1'), findsNWidgets(2));
+
+    await tester.tap(find.text('清空本地数据'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('清空本地数据？'), findsOneWidget);
+
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1'), findsNWidgets(2));
+
+    await tester.tap(find.text('清空本地数据'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '清空'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('0'), findsNWidgets(2));
+
+    await tester.tap(find.text('日程'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('还没有事项'), findsOneWidget);
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('还没有待办'), findsOneWidget);
+
+    await tester.tap(find.text('日历').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('2026年9月'), findsOneWidget);
+    expect(find.byKey(const ValueKey('selected-day-30')), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('我的'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('0'), findsNWidgets(2));
+  });
+
   testWidgets('renders the July 2026 calendar dashboard', (tester) async {
     await tester.pumpWidget(CalendarApp());
 
     expect(find.text('2026年7月'), findsOneWidget);
-    expect(find.text('今天'), findsOneWidget);
+    expect(find.byTooltip('上个月'), findsOneWidget);
+    expect(find.byTooltip('下个月'), findsOneWidget);
     expect(find.text('7月13日'), findsOneWidget);
     expect(find.text('农历五月廿九'), findsOneWidget);
     expect(find.text('当天没有事项'), findsOneWidget);
@@ -83,14 +445,20 @@ void main() {
     }
 
     expect(find.byIcon(Icons.add), findsOneWidget);
-    expect(find.byIcon(Icons.search), findsOneWidget);
   });
 
   testWidgets('month card exposes a five-week grid and selected day', (
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: CalendarMonthCard())),
+      MaterialApp(
+        home: Scaffold(
+          body: CalendarMonthCard(
+            visibleMonth: DateTime(2026, 7),
+            selectedDate: DateTime(2026, 7, 13),
+          ),
+        ),
+      ),
     );
 
     expect(find.byType(CalendarDayCell), findsNWidgets(35));
@@ -446,6 +814,18 @@ Future<void> _createEvent(
 }
 
 ValueKey<String> _deleteKey(String suffix) => ValueKey('delete-event-$suffix');
+
+ValueKey<String> _scheduleDeleteKey(String suffix) {
+  return ValueKey('delete-schedule-event-$suffix');
+}
+
+ValueKey<String> _todoToggleKey(DateTime createdAt) {
+  return ValueKey('toggle-todo-${createdAt.toIso8601String()}');
+}
+
+ValueKey<String> _todoDeleteKey(DateTime createdAt) {
+  return ValueKey('delete-todo-${createdAt.toIso8601String()}');
+}
 
 class _DelayedCalendarEventStore extends CalendarEventStore {
   _DelayedCalendarEventStore(this._loadedEvents);

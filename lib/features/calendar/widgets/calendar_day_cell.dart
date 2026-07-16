@@ -3,9 +3,15 @@ import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_day.dart';
 
 class CalendarDayCell extends StatelessWidget {
-  const CalendarDayCell({required this.day, this.onTap, super.key});
+  const CalendarDayCell({
+    required this.day,
+    this.eventSemanticsLabel,
+    this.onTap,
+    super.key,
+  });
 
   final CalendarDay day;
+  final String? eventSemanticsLabel;
   final VoidCallback? onTap;
 
   @override
@@ -107,7 +113,10 @@ class CalendarDayCell extends StatelessWidget {
       return cell;
     }
 
-    return Semantics(label: '7月${day.day}日有事项', child: cell);
+    return Semantics(
+      label: eventSemanticsLabel ?? '${day.day}日有事项',
+      child: cell,
+    );
   }
 }
 

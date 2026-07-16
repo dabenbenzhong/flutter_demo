@@ -8,19 +8,21 @@ import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart
 
 class CalendarMonthCard extends StatelessWidget {
   const CalendarMonthCard({
-    this.selectedDate,
+    required this.visibleMonth,
+    required this.selectedDate,
     this.onDateSelected,
     this.events = const [],
     super.key,
   });
 
-  final DateTime? selectedDate;
+  final DateTime visibleMonth;
+  final DateTime selectedDate;
   final ValueChanged<DateTime>? onDateSelected;
   final List<CalendarEvent> events;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveSelectedDate = selectedDate ?? DateTime(2026, 7, 13);
+    final cells = _buildMonthCells(visibleMonth);
 
     return AppGlassCard(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
@@ -34,7 +36,7 @@ class CalendarMonthCard extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           GridView.builder(
-            itemCount: calendarDays.length,
+            itemCount: cells.length,
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -43,13 +45,13 @@ class CalendarMonthCard extends StatelessWidget {
               mainAxisExtent: 47,
             ),
             itemBuilder: (context, index) {
-              final day = calendarDays[index];
-              final date = _dateForDay(day, index);
-              final isSelected = isSameCalendarDate(
-                date,
-                effectiveSelectedDate,
-              );
-              final eventColors = _eventColorsForDate(date);
+              final cell = cells[index];
+              final day = cell.day;
+              final date = cell.date;
+              final isSelected = isSameCalendarDate(date, selectedDate);
+              final eventColors = day.isCurrentMonth
+                  ? _eventColorsForDate(date)
+                  : <Color>[];
 
               return CalendarDayCell(
                 day: day.copyWith(
@@ -65,6 +67,7 @@ class CalendarMonthCard extends StatelessWidget {
                         )
                       : null,
                 ),
+                eventSemanticsLabel: '${date.month}月${date.day}日有事项',
                 onTap: day.isCurrentMonth
                     ? () => onDateSelected?.call(date)
                     : null,
@@ -92,12 +95,66 @@ class CalendarMonthCard extends StatelessWidget {
   }
 }
 
-DateTime _dateForDay(CalendarDay day, int index) {
-  if (day.isCurrentMonth) {
-    return DateTime(2026, 7, day.day);
+List<_MonthCell> _buildMonthCells(DateTime visibleMonth) {
+  final firstDay = DateTime(visibleMonth.year, visibleMonth.month);
+  final daysInMonth = DateTime(
+    visibleMonth.year,
+    visibleMonth.month + 1,
+    0,
+  ).day;
+  final leadingDays = firstDay.weekday - DateTime.monday;
+  final minimumCellCount = leadingDays + daysInMonth <= 35 ? 35 : 42;
+
+  return [
+    for (var index = 0; index < minimumCellCount; index++)
+      _monthCellForDate(
+        DateTime(
+          visibleMonth.year,
+          visibleMonth.month,
+          index - leadingDays + 1,
+        ),
+        visibleMonth,
+      ),
+  ];
+}
+
+_MonthCell _monthCellForDate(DateTime date, DateTime visibleMonth) {
+  final isCurrentMonth =
+      date.year == visibleMonth.year && date.month == visibleMonth.month;
+  final demoDay = _demoDayForDate(date, isCurrentMonth);
+
+  return _MonthCell(
+    date: date,
+    day: CalendarDay(
+      day: date.day,
+      lunarText: demoDay?.lunarText ?? '',
+      label: demoDay?.label,
+      labelColor: demoDay?.labelColor,
+      markerColors: demoDay?.markerColors ?? const [],
+      isCurrentMonth: isCurrentMonth,
+    ),
+  );
+}
+
+CalendarDay? _demoDayForDate(DateTime date, bool isCurrentMonth) {
+  if (!isCurrentMonth || date.year != 2026 || date.month != 7) {
+    return null;
   }
 
-  return index < 7 ? DateTime(2026, 6, day.day) : DateTime(2026, 8, day.day);
+  for (final day in calendarDays) {
+    if (day.isCurrentMonth && day.day == date.day) {
+      return day;
+    }
+  }
+
+  return null;
+}
+
+class _MonthCell {
+  const _MonthCell({required this.date, required this.day});
+
+  final DateTime date;
+  final CalendarDay day;
 }
 
 class _WeekdayRow extends StatelessWidget {

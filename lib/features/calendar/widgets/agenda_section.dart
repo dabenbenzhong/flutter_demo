@@ -58,7 +58,11 @@ class AgendaSection extends StatelessWidget {
 }
 
 class AgendaEventTile extends StatelessWidget {
-  const AgendaEventTile({required this.event, required this.onDelete, super.key});
+  const AgendaEventTile({
+    required this.event,
+    required this.onDelete,
+    super.key,
+  });
 
   final CalendarEvent event;
   final VoidCallback onDelete;
@@ -341,9 +345,11 @@ String _lunarDescription(DateTime date) {
     return '农历五月廿九';
   }
 
-  for (final day in calendarDays) {
-    if (day.isCurrentMonth && day.day == date.day) {
-      return '农历${day.lunarText}';
+  if (date.year == 2026 && date.month == 7) {
+    for (final day in calendarDays) {
+      if (day.isCurrentMonth && day.day == date.day) {
+        return '农历${day.lunarText}';
+      }
     }
   }
 

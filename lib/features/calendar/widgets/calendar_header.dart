@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 
 class CalendarHeader extends StatelessWidget {
-  const CalendarHeader({super.key});
+  const CalendarHeader({
+    required this.visibleMonth,
+    required this.onPreviousMonth,
+    required this.onNextMonth,
+    super.key,
+  });
+
+  final DateTime visibleMonth;
+  final VoidCallback onPreviousMonth;
+  final VoidCallback onNextMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -15,37 +24,35 @@ class CalendarHeader extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              _MonthIconButton(
+                tooltip: '上个月',
+                icon: Icons.chevron_left_rounded,
+                isCompact: isCompact,
+                onPressed: onPreviousMonth,
+              ),
+              SizedBox(width: isCompact ? 6 : 8),
               Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        '2026年7月',
-                        maxLines: 1,
-                        overflow: TextOverflow.visible,
-                        softWrap: false,
-                        style: Theme.of(context).textTheme.displaySmall
-                            ?.copyWith(
-                              color: warmBrown,
-                              fontSize: isCompact ? 30 : 34,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0,
-                            ),
-                      ),
-                    ),
-                    SizedBox(width: isCompact ? 4 : 8),
-                    Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: warmBrown,
-                      size: isCompact ? 24 : 28,
-                    ),
-                  ],
+                child: Text(
+                  '${visibleMonth.year}年${visibleMonth.month}月',
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                  softWrap: false,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: warmBrown,
+                    fontSize: isCompact ? 30 : 34,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                  ),
                 ),
               ),
-              TodayButton(isCompact: isCompact),
-              SizedBox(width: isCompact ? 7 : 10),
-              SearchButton(isCompact: isCompact),
+              SizedBox(width: isCompact ? 6 : 8),
+              _MonthIconButton(
+                tooltip: '下个月',
+                icon: Icons.chevron_right_rounded,
+                isCompact: isCompact,
+                onPressed: onNextMonth,
+              ),
             ],
           ),
         );
@@ -54,58 +61,32 @@ class CalendarHeader extends StatelessWidget {
   }
 }
 
-class TodayButton extends StatelessWidget {
-  const TodayButton({required this.isCompact, super.key});
+class _MonthIconButton extends StatelessWidget {
+  const _MonthIconButton({
+    required this.tooltip,
+    required this.icon,
+    required this.isCompact,
+    required this.onPressed,
+  });
 
+  final String tooltip;
+  final IconData icon;
   final bool isCompact;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: isCompact ? 38 : 40,
-      padding: EdgeInsets.symmetric(horizontal: isCompact ? 15 : 18),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        fixedSize: Size.square(isCompact ? 40 : 44),
+        backgroundColor: Colors.white.withValues(alpha: 0.62),
+        foregroundColor: warmBrown,
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.78)),
+        shape: const CircleBorder(),
       ),
-      child: const Text(
-        '今天',
-        style: TextStyle(
-          color: warmBrown,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0,
-        ),
-      ),
-    );
-  }
-}
-
-class SearchButton extends StatelessWidget {
-  const SearchButton({required this.isCompact, super.key});
-
-  final bool isCompact;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: isCompact ? 44 : 48,
-      height: isCompact ? 44 : 48,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.62),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
-      ),
-      child: Icon(Icons.search, color: warmBrown, size: isCompact ? 24 : 26),
+      icon: Icon(icon, size: isCompact ? 24 : 26),
     );
   }
 }

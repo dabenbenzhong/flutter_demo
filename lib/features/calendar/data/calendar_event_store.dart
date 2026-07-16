@@ -105,7 +105,9 @@ class FileCalendarEventStore extends CalendarEventStore {
       final todosJson = decoded['todos'];
 
       return LocalCalendarData(
-        events: eventsJson is List<dynamic> ? _eventsFromJsonList(eventsJson) : [],
+        events: eventsJson is List<dynamic>
+            ? _eventsFromJsonList(eventsJson)
+            : [],
         todos: todosJson is List<dynamic> ? _todosFromJsonList(todosJson) : [],
       );
     } on FormatException {
