@@ -1,58 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
-import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
+import 'package:my_flutter_demo/ui/components/app_components.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class InspirationBanner extends StatelessWidget {
   const InspirationBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
+    final tokens = context.appTheme;
+
+    return AppContentCard(
       padding: EdgeInsets.zero,
-      borderRadius: 20,
-      child: SizedBox(
-        height: 116,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: CustomPaint(painter: _BannerPainter()),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(tokens.radii.card),
+        child: SizedBox(
+          height: 116,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(painter: _BannerPainter(tokens.colors)),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 130, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    '每一天，都是更好的自己。',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: warmBrown,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0,
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  tokens.spacing.xl,
+                  tokens.spacing.md,
+                  130,
+                  tokens.spacing.sm,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      '每一天，都是更好的自己。',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: tokens.text.cardTitle.copyWith(
+                        color: tokens.colors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 9),
-                  Text(
-                    '一 日程 · 规划 · 专注 · 成长',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: warmBrown.withValues(alpha: 0.72),
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0,
+                    SizedBox(height: tokens.spacing.xs),
+                    Text(
+                      '一 日程 · 规划 · 专注 · 成长',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tokens.text.helper.copyWith(
+                        color: tokens.colors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -60,18 +62,25 @@ class InspirationBanner extends StatelessWidget {
 }
 
 class _BannerPainter extends CustomPainter {
+  const _BannerPainter(this.colors);
+
+  final AppColorTokens colors;
+
   @override
   void paint(Canvas canvas, Size size) {
     final background = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xfffff8ef), Color(0xfff4dbc2)],
+      ..shader = LinearGradient(
+        colors: [
+          colors.surface,
+          Color.lerp(colors.surfaceMuted, colors.primaryAction, 0.18)!,
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, background);
 
     final glow = Paint()
-      ..color = Colors.white.withValues(alpha: 0.45)
+      ..color = colors.surface.withValues(alpha: 0.45)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
     canvas.drawOval(
       Rect.fromCenter(
@@ -89,7 +98,8 @@ class _BannerPainter extends CustomPainter {
   }
 
   void _drawDesk(Canvas canvas, Size size) {
-    final deskPaint = Paint()..color = const Color(0xffd2a165);
+    final deskPaint = Paint()
+      ..color = Color.lerp(colors.primaryAction, colors.surface, 0.28)!;
     final top = size.height * 0.8;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -103,13 +113,13 @@ class _BannerPainter extends CustomPainter {
   void _drawBooks(Canvas canvas, Size size) {
     final left = size.width * 0.55;
     final top = size.height * 0.67;
-    final colors = [
-      const Color(0xffd6a46d),
-      const Color(0xfffff4e3),
-      const Color(0xffc68f55),
+    final bookColors = [
+      Color.lerp(colors.primaryAction, colors.surface, 0.22)!,
+      colors.surface,
+      Color.lerp(colors.primaryAction, colors.textPrimary, 0.16)!,
     ];
 
-    for (var index = 0; index < 3; index++) {
+    for (var index = 0; index < bookColors.length; index++) {
       final rect = Rect.fromLTWH(
         left + (index * 6),
         top + (index * 10),
@@ -118,15 +128,15 @@ class _BannerPainter extends CustomPainter {
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(3)),
-        Paint()..color = colors[index],
+        Paint()..color = bookColors[index],
       );
     }
   }
 
   void _drawCup(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0xfffff4df);
+    final paint = Paint()..color = colors.surface;
     final stroke = Paint()
-      ..color = const Color(0xffa8733e)
+      ..color = colors.primaryAction
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     final cup = Rect.fromLTWH(size.width * 0.78, size.height * 0.62, 44, 34);
@@ -145,17 +155,19 @@ class _BannerPainter extends CustomPainter {
 
   void _drawPlant(Canvas canvas, Size size) {
     final stem = Paint()
-      ..color = const Color(0xff668145)
+      ..color = colors.statusSuccess
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
-    final potPaint = Paint()..color = const Color(0xffd5ad79);
+    final potPaint = Paint()
+      ..color = Color.lerp(colors.primaryAction, colors.surface, 0.36)!;
     final base = Offset(size.width * 0.72, size.height * 0.73);
 
     canvas.drawLine(base, Offset(base.dx - 10, base.dy - 62), stem);
     canvas.drawLine(base, Offset(base.dx + 8, base.dy - 55), stem);
     canvas.drawLine(base, Offset(base.dx - 2, base.dy - 72), stem);
 
-    final leafPaint = Paint()..color = const Color(0xff7d9551);
+    final leafPaint = Paint()
+      ..color = Color.lerp(colors.statusSuccess, colors.textPrimary, 0.16)!;
     for (final offset in const [
       Offset(-24, -48),
       Offset(-8, -64),
@@ -184,5 +196,7 @@ class _BannerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BannerPainter oldDelegate) {
+    return colors != oldDelegate.colors;
+  }
 }

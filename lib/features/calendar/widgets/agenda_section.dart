@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
-import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
+import 'package:my_flutter_demo/ui/components/app_components.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class AgendaSection extends StatelessWidget {
   const AgendaSection({
@@ -17,13 +18,20 @@ class AgendaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppGlassCard(
-      padding: const EdgeInsets.fromLTRB(20, 18, 16, 22),
+    final tokens = context.appTheme;
+
+    return AppContentCard(
+      padding: EdgeInsets.fromLTRB(
+        tokens.spacing.lg,
+        tokens.spacing.lg - 2,
+        tokens.spacing.md,
+        tokens.spacing.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _AgendaHeader(selectedDate: selectedDate),
-          const SizedBox(height: 16),
+          SizedBox(height: tokens.spacing.md),
           if (events.isEmpty)
             const _EmptyAgendaState()
           else
@@ -32,9 +40,9 @@ class AgendaSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _TimeColumn(events: events),
-                  const SizedBox(width: 10),
+                  SizedBox(width: tokens.spacing.xs),
                   _TimelineRail(events: events),
-                  const SizedBox(width: 14),
+                  SizedBox(width: tokens.spacing.sm),
                   Expanded(
                     child: Column(
                       children: [
@@ -43,7 +51,8 @@ class AgendaSection extends StatelessWidget {
                             event: event,
                             onDelete: () => onDeleteEvent(event),
                           ),
-                          if (event != events.last) const SizedBox(height: 10),
+                          if (event != events.last)
+                            SizedBox(height: tokens.spacing.xs),
                         ],
                       ],
                     ),
@@ -69,19 +78,14 @@ class AgendaEventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return Container(
       height: 74,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.74),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xff4c2d18).withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        color: tokens.colors.surfaceMuted.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(tokens.radii.control),
+        border: Border.all(color: tokens.colors.border),
       ),
       child: Row(
         children: [
@@ -90,13 +94,13 @@ class AgendaEventTile extends StatelessWidget {
             height: double.infinity,
             decoration: BoxDecoration(
               color: event.color,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(tokens.radii.control),
+                bottomLeft: Radius.circular(tokens.radii.control),
               ),
             ),
           ),
-          const SizedBox(width: 18),
+          SizedBox(width: tokens.spacing.md),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -106,29 +110,24 @@ class AgendaEventTile extends StatelessWidget {
                   event.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: warmBrown,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0,
+                  style: tokens.text.cardTitle.copyWith(
+                    color: tokens.colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: tokens.spacing.xxs + 2),
                 Text(
                   event.detail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: warmBrown.withValues(alpha: 0.7),
-                    fontSize: 14,
+                  style: tokens.text.helper.copyWith(
+                    color: tokens.colors.textSecondary,
                     fontWeight: FontWeight.w500,
-                    letterSpacing: 0,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: tokens.spacing.xs),
           _EventIcon(event: event),
           IconButton(
             key: ValueKey(
@@ -137,9 +136,9 @@ class AgendaEventTile extends StatelessWidget {
             tooltip: '删除事项',
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline_rounded),
-            color: warmBrown.withValues(alpha: 0.62),
+            color: tokens.colors.textSecondary,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: tokens.spacing.xxs),
         ],
       ),
     );
@@ -153,6 +152,8 @@ class _AgendaHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -168,64 +169,60 @@ class _AgendaHeader extends StatelessWidget {
                       '${selectedDate.month}月${selectedDate.day}日',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: warmBrown,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
+                      style: tokens.text.sectionTitle.copyWith(
+                        color: tokens.colors.textPrimary,
+                        fontSize: 24,
                         height: 1,
-                        letterSpacing: 0,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 9),
+                  SizedBox(width: tokens.spacing.xs),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Text(
                       _weekdayText(selectedDate),
-                      style: TextStyle(
-                        color: warmBrown.withValues(alpha: 0.86),
-                        fontSize: 14,
+                      style: tokens.text.helper.copyWith(
+                        color: tokens.colors.textSecondary,
                         height: 1,
                         fontWeight: FontWeight.w500,
-                        letterSpacing: 0,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 9),
+              SizedBox(height: tokens.spacing.xs),
               Text(
                 _lunarDescription(selectedDate),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: warmBrown.withValues(alpha: 0.86),
-                  fontSize: 14,
+                style: tokens.text.helper.copyWith(
+                  color: tokens.colors.textSecondary,
                   height: 1,
                   fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: tokens.spacing.xs),
         Padding(
           padding: const EdgeInsets.only(bottom: 2),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 '33日后 周例会',
-                style: TextStyle(
-                  color: warmBrown,
-                  fontSize: 13,
+                style: tokens.text.helper.copyWith(
+                  color: tokens.colors.textPrimary,
                   fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
                 ),
               ),
-              SizedBox(width: 5),
-              Icon(Icons.chevron_right_rounded, color: warmBrown, size: 22),
+              SizedBox(width: tokens.spacing.xxs),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: tokens.colors.primaryAction,
+                size: 22,
+              ),
             ],
           ),
         ),
@@ -241,6 +238,8 @@ class _TimeColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return SizedBox(
       width: 58,
       child: Column(
@@ -256,11 +255,9 @@ class _TimeColumn extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 16),
                   child: Text(
                     event.time,
-                    style: const TextStyle(
-                      color: warmBrown,
-                      fontSize: 16,
+                    style: tokens.text.body.copyWith(
+                      color: tokens.colors.textPrimary,
                       fontWeight: FontWeight.w700,
-                      letterSpacing: 0,
                     ),
                   ),
                 ),
@@ -279,6 +276,8 @@ class _TimelineRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return SizedBox(
       width: 15,
       child: Stack(
@@ -287,7 +286,7 @@ class _TimelineRail extends StatelessWidget {
           Positioned(
             top: 24,
             bottom: 24,
-            child: Container(width: 2, color: const Color(0xffd4cbc1)),
+            child: Container(width: 2, color: tokens.colors.border),
           ),
           for (var index = 0; index < events.length; index++)
             Positioned(
@@ -298,7 +297,7 @@ class _TimelineRail extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: events[index].color,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: tokens.colors.surface, width: 2),
                 ),
               ),
             ),
@@ -313,22 +312,22 @@ class _EmptyAgendaState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 30),
+      padding: EdgeInsets.symmetric(vertical: tokens.spacing.xl),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        color: tokens.colors.surfaceMuted.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(tokens.radii.control),
+        border: Border.all(color: tokens.colors.border),
       ),
       child: Text(
         '当天没有事项',
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: warmBrown.withValues(alpha: 0.68),
-          fontSize: 16,
+        style: tokens.text.body.copyWith(
+          color: tokens.colors.textSecondary,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0,
         ),
       ),
     );
@@ -363,19 +362,15 @@ class _EventIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return Container(
       width: 42,
       height: 42,
       decoration: BoxDecoration(
         color: event.iconBackground,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: event.color.withValues(alpha: 0.16),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(tokens.radii.control),
+        border: Border.all(color: tokens.colors.border),
       ),
       child: Icon(event.icon, color: event.color, size: 25),
     );

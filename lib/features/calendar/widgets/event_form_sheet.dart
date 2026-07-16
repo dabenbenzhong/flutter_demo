@@ -3,6 +3,7 @@ import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 import 'package:my_flutter_demo/ui/components/app_components.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class EventFormSheet extends StatefulWidget {
   const EventFormSheet({required this.selectedDate, super.key});
@@ -32,6 +33,8 @@ class _EventFormSheetState extends State<EventFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return AppBottomFormShell(
       title: '新增事项',
       subtitle: '日期：${widget.selectedDate.month}月${widget.selectedDate.day}日',
@@ -44,7 +47,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
           textInputAction: TextInputAction.next,
           validator: _requiredTextValidator,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spacing.sm),
         Row(
           children: [
             Expanded(
@@ -55,7 +58,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
                 validator: _clockTimeValidator,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: tokens.spacing.sm),
             Expanded(
               child: TextFormField(
                 controller: _endTimeController,
@@ -66,22 +69,35 @@ class _EventFormSheetState extends State<EventFormSheet> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spacing.sm),
         TextFormField(
           controller: _notesController,
           decoration: const InputDecoration(labelText: '备注'),
           maxLines: 2,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: tokens.spacing.md),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: tokens.spacing.xs,
+          runSpacing: tokens.spacing.xs,
           children: [
             for (final option in _eventColorOptions)
               ChoiceChip(
                 label: Text(option.label),
                 selected: option == _selectedColor,
                 avatar: CircleAvatar(backgroundColor: option.color),
+                showCheckmark: false,
+                backgroundColor: tokens.colors.surface,
+                selectedColor: tokens.colors.primaryAction.withValues(
+                  alpha: 0.14,
+                ),
+                side: BorderSide(
+                  color: option == _selectedColor
+                      ? tokens.colors.primaryAction
+                      : tokens.colors.border,
+                ),
+                labelStyle: tokens.text.helper.copyWith(
+                  color: tokens.colors.textPrimary,
+                ),
                 onSelected: (_) {
                   setState(() {
                     _selectedColor = option;

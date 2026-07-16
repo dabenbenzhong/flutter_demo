@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_day.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class CalendarDayCell extends StatelessWidget {
   const CalendarDayCell({
@@ -16,27 +16,39 @@ class CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+    final inactiveTextColor = tokens.colors.textSecondary.withValues(
+      alpha: 0.58,
+    );
+    final inactiveSubtitleColor = tokens.colors.textSecondary.withValues(
+      alpha: 0.5,
+    );
     final textColor = day.isCurrentMonth
-        ? Colors.black
-        : const Color(0xffaaa49e);
+        ? tokens.colors.textPrimary
+        : inactiveTextColor;
     final subtitleColor = day.isCurrentMonth
-        ? warmBrown.withValues(alpha: 0.82)
-        : const Color(0xffaaa49e);
+        ? tokens.colors.textSecondary
+        : inactiveSubtitleColor;
+    final selectedTextColor = tokens.colors.onPrimaryAction;
 
     final cell = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: SizedBox(
-        height: 47,
+        height: 48,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.topCenter,
           children: [
             if (day.showSelectionPointer)
-              const Positioned(
+              Positioned(
                 left: -6,
                 top: 13,
-                child: Icon(Icons.play_arrow_rounded, color: caramel, size: 15),
+                child: Icon(
+                  Icons.play_arrow_rounded,
+                  color: tokens.colors.primaryAction,
+                  size: 15,
+                ),
               ),
             if (day.isSelected)
               Positioned(
@@ -47,22 +59,9 @@ class CalendarDayCell extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xffd99a52), Color(0xffb66f2e)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: caramel.withValues(alpha: 0.42),
-                        blurRadius: 14,
-                        offset: const Offset(0, 7),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      width: 2,
-                    ),
+                    color: tokens.colors.primaryAction,
+                    boxShadow: tokens.shadows.floating,
+                    border: Border.all(color: tokens.colors.surface, width: 2),
                   ),
                 ),
               ),
@@ -72,12 +71,10 @@ class CalendarDayCell extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   '${day.day}',
-                  style: TextStyle(
-                    color: day.isSelected ? Colors.white : textColor,
-                    fontSize: day.isSelected ? 18 : 17,
+                  style: tokens.text.cardTitle.copyWith(
+                    color: day.isSelected ? selectedTextColor : textColor,
                     height: 1.05,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -85,16 +82,15 @@ class CalendarDayCell extends StatelessWidget {
                   day.label ?? day.lunarText,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: tokens.text.helper.copyWith(
                     color: day.isSelected
-                        ? Colors.white
+                        ? selectedTextColor
                         : day.labelColor ?? subtitleColor,
-                    fontSize: 10.5,
+                    fontSize: 11,
                     height: 1.05,
                     fontWeight: day.label == null
                         ? FontWeight.w500
                         : FontWeight.w700,
-                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -128,8 +124,10 @@ class _MarkerDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     if (colors.isEmpty) {
-      return const SizedBox(height: 5);
+      return SizedBox(height: tokens.spacing.xs - 3);
     }
 
     return Row(
@@ -140,7 +138,7 @@ class _MarkerDots extends StatelessWidget {
             key: color == colors.first ? eventMarkerKey : null,
             width: 5,
             height: 5,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
+            margin: EdgeInsets.symmetric(horizontal: tokens.spacing.xxs / 4),
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
       ],

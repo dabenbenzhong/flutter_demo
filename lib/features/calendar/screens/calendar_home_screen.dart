@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
@@ -14,6 +13,7 @@ import 'package:my_flutter_demo/features/calendar/widgets/todo_form_sheet.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_time_utils.dart';
 import 'package:my_flutter_demo/ui/components/app_components.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class CalendarHomeScreen extends StatefulWidget {
   const CalendarHomeScreen({
@@ -322,6 +322,8 @@ class _CalendarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return AppPageContainer(
       child: Column(
         children: [
@@ -336,13 +338,13 @@ class _CalendarPage extends StatelessWidget {
             onDateSelected: onDateSelected,
             events: events,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: tokens.spacing.md),
           AgendaSection(
             selectedDate: selectedDate,
             events: selectedEvents,
             onDeleteEvent: onDeleteEvent,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: tokens.spacing.md),
           const InspirationBanner(),
         ],
       ),
@@ -363,6 +365,7 @@ class _SchedulePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
     final sortedEvents = List.of(events)..sort(_compareEventsByDateTime);
 
     return AppPageContainer(
@@ -370,7 +373,7 @@ class _SchedulePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AppPageTitle(title: '日程', subtitle: '按日期查看全部本地事项'),
-          const SizedBox(height: 14),
+          SizedBox(height: tokens.spacing.md),
           if (sortedEvents.isEmpty)
             AppEmptyState(
               icon: Icons.event_available_rounded,
@@ -387,7 +390,7 @@ class _SchedulePage extends StatelessWidget {
                 events: group.events,
                 onDeleteEvent: onDeleteEvent,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: tokens.spacing.sm),
             ],
         ],
       ),
@@ -410,6 +413,7 @@ class _TodoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
     final sortedTodos = List.of(todos)..sort(_compareTodos);
 
     return AppPageContainer(
@@ -417,7 +421,7 @@ class _TodoPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AppPageTitle(title: '待办', subtitle: '管理轻量清单'),
-          const SizedBox(height: 14),
+          SizedBox(height: tokens.spacing.md),
           if (sortedTodos.isEmpty)
             AppEmptyState(
               icon: Icons.check_box_rounded,
@@ -436,14 +440,14 @@ class _TodoPage extends StatelessWidget {
                 label: const Text('新增待办'),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: tokens.spacing.sm),
             for (final todo in sortedTodos) ...[
               _TodoTile(
                 todo: todo,
                 onToggle: () => onToggleTodo(todo),
                 onDelete: () => onDeleteTodo(todo),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: tokens.spacing.xs),
             ],
           ],
         ],
@@ -465,16 +469,29 @@ class _TodoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+    final titleColor = todo.isCompleted
+        ? tokens.colors.statusCompleted
+        : tokens.colors.textPrimary;
+
     return AppContentCard(
-      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+      padding: EdgeInsets.fromLTRB(
+        tokens.spacing.sm,
+        tokens.spacing.sm,
+        tokens.spacing.xs,
+        tokens.spacing.sm,
+      ),
       child: Row(
         children: [
           Checkbox(
             key: ValueKey('toggle-todo-${todo.createdAt.toIso8601String()}'),
             value: todo.isCompleted,
+            activeColor: tokens.colors.statusSuccess,
+            checkColor: tokens.colors.onPrimaryAction,
+            side: BorderSide(color: tokens.colors.border, width: 1.4),
             onChanged: (_) => onToggle(),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: tokens.spacing.xxs),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,27 +500,25 @@ class _TodoTile extends StatelessWidget {
                   todo.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: warmBrown,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
+                  style: tokens.text.cardTitle.copyWith(
+                    color: titleColor,
                     decoration: todo.isCompleted
                         ? TextDecoration.lineThrough
                         : TextDecoration.none,
-                    letterSpacing: 0,
+                    decorationColor: tokens.colors.statusCompleted,
                   ),
                 ),
                 if (todo.notes.isNotEmpty) ...[
-                  const SizedBox(height: 5),
+                  SizedBox(height: tokens.spacing.xxs + 1),
                   Text(
                     todo.notes,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: warmBrown.withValues(alpha: 0.68),
-                      fontSize: 13,
+                    style: tokens.text.helper.copyWith(
+                      color: todo.isCompleted
+                          ? tokens.colors.statusCompleted
+                          : tokens.colors.textSecondary,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0,
                     ),
                   ),
                 ],
@@ -515,7 +530,7 @@ class _TodoTile extends StatelessWidget {
             tooltip: '删除待办',
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline_rounded),
-            color: warmBrown.withValues(alpha: 0.62),
+            color: tokens.colors.textSecondary,
           ),
         ],
       ),
@@ -536,49 +551,48 @@ class _ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return AppPageContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AppPageTitle(title: '我的', subtitle: '本地应用信息'),
-          const SizedBox(height: 14),
+          SizedBox(height: tokens.spacing.md),
           AppContentCard(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+            padding: EdgeInsets.fromLTRB(
+              tokens.spacing.lg,
+              tokens.spacing.lg,
+              tokens.spacing.lg,
+              tokens.spacing.lg,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '日历',
-                  style: TextStyle(
-                    color: warmBrown,
-                    fontSize: 24,
+                  style: tokens.text.sectionTitle.copyWith(
+                    color: tokens.colors.textPrimary,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: tokens.spacing.xs),
                 Text(
                   '本地日历专注记录事项和待办项，数据保存在当前设备内。',
-                  style: TextStyle(
-                    color: warmBrown.withValues(alpha: 0.72),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                    letterSpacing: 0,
+                  style: tokens.text.body.copyWith(
+                    color: tokens.colors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: tokens.spacing.lg),
                 AppStatRow(label: '事项数量', value: eventCount),
-                const SizedBox(height: 10),
+                SizedBox(height: tokens.spacing.xs),
                 AppStatRow(label: '待办项数量', value: todoCount),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: onClearData,
-                    icon: const Icon(Icons.delete_sweep_rounded),
-                    label: const Text('清空本地数据'),
-                  ),
+                SizedBox(height: tokens.spacing.lg),
+                AppDangerButton(
+                  fullWidth: true,
+                  icon: Icons.delete_sweep_rounded,
+                  label: '清空本地数据',
+                  onPressed: onClearData,
                 ),
               ],
             ),
@@ -602,33 +616,37 @@ class _ScheduleDateGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return AppContentCard(
-      padding: const EdgeInsets.fromLTRB(18, 16, 14, 18),
+      padding: EdgeInsets.fromLTRB(
+        tokens.spacing.lg - 2,
+        tokens.spacing.md,
+        tokens.spacing.sm,
+        tokens.spacing.lg - 2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '${date.year}年${date.month}月${date.day}日',
-            style: const TextStyle(
-              color: warmBrown,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0,
+            style: tokens.text.sectionTitle.copyWith(
+              color: tokens.colors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: tokens.spacing.sm),
           for (final event in events) ...[
             Row(
               children: [
                 Container(
-                  width: 8,
+                  width: tokens.spacing.xs,
                   height: 38,
                   decoration: BoxDecoration(
                     color: event.color,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(tokens.radii.xs),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: tokens.spacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,21 +655,15 @@ class _ScheduleDateGroup extends StatelessWidget {
                         event.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: warmBrown,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0,
+                        style: tokens.text.cardTitle.copyWith(
+                          color: tokens.colors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: tokens.spacing.xxs),
                       Text(
                         '${event.time} - ${event.endTime}',
-                        style: TextStyle(
-                          color: warmBrown.withValues(alpha: 0.68),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0,
+                        style: tokens.text.helper.copyWith(
+                          color: tokens.colors.textSecondary,
                         ),
                       ),
                     ],
@@ -664,11 +676,11 @@ class _ScheduleDateGroup extends StatelessWidget {
                   tooltip: '删除事项',
                   onPressed: () => onDeleteEvent(event),
                   icon: const Icon(Icons.delete_outline_rounded),
-                  color: warmBrown.withValues(alpha: 0.62),
+                  color: tokens.colors.textSecondary,
                 ),
               ],
             ),
-            if (event != events.last) const SizedBox(height: 12),
+            if (event != events.last) SizedBox(height: tokens.spacing.sm),
           ],
         ],
       ),

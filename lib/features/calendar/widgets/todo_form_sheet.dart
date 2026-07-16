@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
 import 'package:my_flutter_demo/ui/components/app_components.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class TodoFormSheet extends StatefulWidget {
   const TodoFormSheet({super.key});
@@ -23,6 +24,8 @@ class _TodoFormSheetState extends State<TodoFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return AppBottomFormShell(
       title: '新增待办项',
       formKey: _formKey,
@@ -34,7 +37,7 @@ class _TodoFormSheetState extends State<TodoFormSheet> {
           textInputAction: TextInputAction.next,
           validator: _requiredTextValidator,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spacing.sm),
         TextFormField(
           controller: _notesController,
           decoration: const InputDecoration(labelText: '备注'),

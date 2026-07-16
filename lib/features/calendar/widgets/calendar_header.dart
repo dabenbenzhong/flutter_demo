@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class CalendarHeader extends StatelessWidget {
   const CalendarHeader({
@@ -15,48 +15,44 @@ class CalendarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 390;
+    final tokens = context.appTheme;
 
-        return Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, isCompact ? 12 : 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _MonthIconButton(
-                tooltip: '上个月',
-                icon: Icons.chevron_left_rounded,
-                isCompact: isCompact,
-                onPressed: onPreviousMonth,
-              ),
-              SizedBox(width: isCompact ? 6 : 8),
-              Expanded(
-                child: Text(
-                  '${visibleMonth.year}年${visibleMonth.month}月',
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.visible,
-                  softWrap: false,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: warmBrown,
-                    fontSize: isCompact ? 30 : 34,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
-              SizedBox(width: isCompact ? 6 : 8),
-              _MonthIconButton(
-                tooltip: '下个月',
-                icon: Icons.chevron_right_rounded,
-                isCompact: isCompact,
-                onPressed: onNextMonth,
-              ),
-            ],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        tokens.spacing.md,
+        tokens.spacing.sm,
+        tokens.spacing.md,
+        tokens.spacing.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _MonthIconButton(
+            tooltip: '上个月',
+            icon: Icons.chevron_left_rounded,
+            onPressed: onPreviousMonth,
           ),
-        );
-      },
+          SizedBox(width: tokens.spacing.xs),
+          Expanded(
+            child: Text(
+              '${visibleMonth.year}年${visibleMonth.month}月',
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.visible,
+              softWrap: false,
+              style: tokens.text.pageTitle.copyWith(
+                color: tokens.colors.textPrimary,
+              ),
+            ),
+          ),
+          SizedBox(width: tokens.spacing.xs),
+          _MonthIconButton(
+            tooltip: '下个月',
+            icon: Icons.chevron_right_rounded,
+            onPressed: onNextMonth,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -65,28 +61,30 @@ class _MonthIconButton extends StatelessWidget {
   const _MonthIconButton({
     required this.tooltip,
     required this.icon,
-    required this.isCompact,
     required this.onPressed,
   });
 
   final String tooltip;
   final IconData icon;
-  final bool isCompact;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        fixedSize: Size.square(isCompact ? 40 : 44),
-        backgroundColor: Colors.white.withValues(alpha: 0.62),
-        foregroundColor: warmBrown,
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.78)),
-        shape: const CircleBorder(),
+        fixedSize: const Size.square(44),
+        backgroundColor: tokens.colors.surface,
+        foregroundColor: tokens.colors.primaryAction,
+        side: BorderSide(color: tokens.colors.border),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(tokens.radii.control),
+        ),
       ),
-      icon: Icon(icon, size: isCompact ? 24 : 26),
+      icon: Icon(icon, size: 24),
     );
   }
 }

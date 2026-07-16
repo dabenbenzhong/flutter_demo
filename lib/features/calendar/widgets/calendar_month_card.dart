@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_day.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
-import 'package:my_flutter_demo/features/calendar/widgets/app_glass_card.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
 import 'package:my_flutter_demo/features/calendar/utils/calendar_date_utils.dart';
+import 'package:my_flutter_demo/ui/components/app_components.dart';
+import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class CalendarMonthCard extends StatelessWidget {
   const CalendarMonthCard({
@@ -22,19 +23,22 @@ class CalendarMonthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
     final cells = _buildMonthCells(visibleMonth);
 
-    return AppGlassCard(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+    return AppContentCard(
+      padding: EdgeInsets.fromLTRB(
+        tokens.spacing.md,
+        tokens.spacing.sm,
+        tokens.spacing.md,
+        tokens.spacing.md,
+      ),
       child: Column(
         children: [
           const _WeekdayRow(),
-          const SizedBox(height: 7),
-          Divider(
-            height: 1,
-            color: const Color(0xffd9cfc3).withValues(alpha: 0.72),
-          ),
-          const SizedBox(height: 9),
+          SizedBox(height: tokens.spacing.xs),
+          Divider(height: 1, color: tokens.colors.border),
+          SizedBox(height: tokens.spacing.xs),
           GridView.builder(
             itemCount: cells.length,
             padding: EdgeInsets.zero,
@@ -42,7 +46,7 @@ class CalendarMonthCard extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              mainAxisExtent: 47,
+              mainAxisExtent: 48,
             ),
             itemBuilder: (context, index) {
               final cell = cells[index];
@@ -162,6 +166,8 @@ class _WeekdayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
     return Row(
       children: [
         for (final weekday in weekdays)
@@ -169,11 +175,9 @@ class _WeekdayRow extends StatelessWidget {
             child: Text(
               weekday,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: warmBrown,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0,
+              style: tokens.text.body.copyWith(
+                color: tokens.colors.textPrimary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

@@ -206,6 +206,39 @@ class AppStatRow extends StatelessWidget {
   }
 }
 
+class AppDangerButton extends StatelessWidget {
+  const AppDangerButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.fullWidth = false,
+    super.key,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final bool fullWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+
+    return SizedBox(
+      width: fullWidth ? double.infinity : null,
+      child: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: tokens.colors.dangerAction,
+          foregroundColor: tokens.colors.onDangerAction,
+        ),
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(label),
+      ),
+    );
+  }
+}
+
 class AppConfirmDialog extends StatelessWidget {
   const AppConfirmDialog({
     required this.title,

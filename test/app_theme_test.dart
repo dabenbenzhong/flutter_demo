@@ -4,9 +4,13 @@ import 'package:my_flutter_demo/app.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_demo_data.dart';
 import 'package:my_flutter_demo/features/calendar/data/calendar_event_store.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
+import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
 import 'package:my_flutter_demo/features/calendar/screens/calendar_home_screen.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/add_event_button.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/agenda_section.dart';
 import 'package:my_flutter_demo/features/calendar/widgets/calendar_bottom_navigation.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/calendar_day_cell.dart';
+import 'package:my_flutter_demo/features/calendar/widgets/calendar_month_card.dart';
 import 'package:my_flutter_demo/ui/components/app_components.dart';
 import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
@@ -218,6 +222,243 @@ void main() {
     expect(actionIcon.color, tokens.colors.onPrimaryAction);
   });
 
+  testWidgets('calendar page areas use application design tokens', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 13),
+        time: '10:00',
+        endTime: '11:00',
+        title: '读书',
+        notes: '整理摘抄',
+        color: blueMarker,
+        icon: Icons.event_note_rounded,
+        iconBackground: const Color(0xffeef4ff),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(CalendarHomeScreen));
+    final tokens = context.appTheme;
+
+    expect(
+      find.descendant(
+        of: find.byType(CalendarMonthCard),
+        matching: find.byType(AppContentCard),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(AgendaSection),
+        matching: find.byType(AppContentCard),
+      ),
+      findsOneWidget,
+    );
+
+    final headerTitle = tester.widget<Text>(find.text('2026年7月'));
+    expect(headerTitle.style?.fontSize, tokens.text.pageTitle.fontSize);
+    expect(headerTitle.style?.fontWeight, tokens.text.pageTitle.fontWeight);
+    expect(headerTitle.style?.color, tokens.colors.textPrimary);
+
+    final previousButton = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.chevron_left_rounded),
+    );
+    expect(
+      previousButton.style?.fixedSize?.resolve(<WidgetState>{}),
+      const Size.square(44),
+    );
+    expect(
+      previousButton.style?.backgroundColor?.resolve(<WidgetState>{}),
+      tokens.colors.surface,
+    );
+    expect(
+      previousButton.style?.foregroundColor?.resolve(<WidgetState>{}),
+      tokens.colors.primaryAction,
+    );
+    expect(
+      previousButton.style?.side?.resolve(<WidgetState>{})?.color,
+      tokens.colors.border,
+    );
+
+    final selectedDecoration = _containerDecoration(
+      tester,
+      const ValueKey('selected-day-13'),
+    );
+    expect(selectedDecoration.color, tokens.colors.primaryAction);
+    expect(selectedDecoration.gradient, isNull);
+    expect(selectedDecoration.border?.top.color, tokens.colors.surface);
+
+    final leadingCalendarCell = find.byType(CalendarDayCell).first;
+    final leadingCellTexts = tester
+        .widgetList<Text>(
+          find.descendant(of: leadingCalendarCell, matching: find.byType(Text)),
+        )
+        .toList();
+
+    expect(
+      leadingCellTexts.first.style?.color,
+      tokens.colors.textSecondary.withValues(alpha: 0.58),
+    );
+    expect(
+      leadingCellTexts.last.style?.color,
+      tokens.colors.textSecondary.withValues(alpha: 0.5),
+    );
+
+    final eventTitle = tester.widget<Text>(find.text('读书'));
+    final eventDetail = tester.widget<Text>(find.text('11:00 · 整理摘抄'));
+
+    expect(eventTitle.style?.fontSize, tokens.text.cardTitle.fontSize);
+    expect(eventTitle.style?.fontWeight, tokens.text.cardTitle.fontWeight);
+    expect(eventTitle.style?.color, tokens.colors.textPrimary);
+    expect(eventDetail.style?.fontSize, tokens.text.helper.fontSize);
+    expect(eventDetail.style?.color, tokens.colors.textSecondary);
+  });
+
+  testWidgets('schedule page list uses application design tokens', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 14),
+        time: '09:00',
+        endTime: '09:30',
+        title: '晨间计划',
+        color: blueMarker,
+        icon: Icons.event_note_rounded,
+        iconBackground: const Color(0xffeef4ff),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(_navigationLabel('日程'));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(CalendarHomeScreen));
+    final tokens = context.appTheme;
+
+    expect(find.byType(AppPageContainer), findsOneWidget);
+    expect(find.byType(AppPageTitle), findsOneWidget);
+    expect(find.byType(AppContentCard), findsOneWidget);
+
+    final dateTitle = tester.widget<Text>(find.text('2026年7月14日'));
+    final eventTitle = tester.widget<Text>(find.text('晨间计划'));
+    final eventTime = tester.widget<Text>(find.text('09:00 - 09:30'));
+    final deleteButton = tester.widget<IconButton>(
+      find.byKey(const ValueKey('delete-schedule-event-2026-7-14-09:00-晨间计划')),
+    );
+
+    expect(dateTitle.style?.fontSize, tokens.text.sectionTitle.fontSize);
+    expect(dateTitle.style?.color, tokens.colors.textPrimary);
+    expect(eventTitle.style?.fontSize, tokens.text.cardTitle.fontSize);
+    expect(eventTitle.style?.color, tokens.colors.textPrimary);
+    expect(eventTime.style?.fontSize, tokens.text.helper.fontSize);
+    expect(eventTime.style?.color, tokens.colors.textSecondary);
+    expect(deleteButton.color, tokens.colors.textSecondary);
+  });
+
+  testWidgets('todo page list uses application design tokens', (tester) async {
+    final store = MemoryCalendarEventStore([], [
+      TodoItem(title: '买菜', notes: '准备晚餐', createdAt: DateTime(2026, 7, 14, 9)),
+      TodoItem(
+        title: '归档票据',
+        isCompleted: true,
+        createdAt: DateTime(2026, 7, 14, 8),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(_navigationLabel('待办'));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(CalendarHomeScreen));
+    final tokens = context.appTheme;
+
+    expect(find.byType(AppPageContainer), findsOneWidget);
+    expect(find.byType(AppPageTitle), findsOneWidget);
+    expect(find.byType(AppContentCard), findsNWidgets(2));
+
+    final activeTitle = tester.widget<Text>(find.text('买菜'));
+    final activeNotes = tester.widget<Text>(find.text('准备晚餐'));
+    final completedTitle = tester.widget<Text>(find.text('归档票据'));
+    final deleteButton = tester.widget<IconButton>(
+      find.byKey(
+        ValueKey('delete-todo-${DateTime(2026, 7, 14, 9).toIso8601String()}'),
+      ),
+    );
+
+    expect(activeTitle.style?.fontSize, tokens.text.cardTitle.fontSize);
+    expect(activeTitle.style?.color, tokens.colors.textPrimary);
+    expect(activeNotes.style?.fontSize, tokens.text.helper.fontSize);
+    expect(activeNotes.style?.color, tokens.colors.textSecondary);
+    expect(completedTitle.style?.color, tokens.colors.statusCompleted);
+    expect(completedTitle.style?.decoration, TextDecoration.lineThrough);
+    expect(deleteButton.color, tokens.colors.textSecondary);
+  });
+
+  testWidgets('profile page uses statistic and danger action tokens', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore(
+      [
+        CalendarEvent(
+          date: DateTime(2026, 7, 14),
+          time: '10:00',
+          endTime: '11:00',
+          title: '读书',
+          color: blueMarker,
+          icon: Icons.event_note_rounded,
+          iconBackground: const Color(0xffeef4ff),
+        ),
+      ],
+      [TodoItem(title: '买菜', createdAt: DateTime(2026, 7, 14, 9))],
+    );
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(_navigationLabel('我的'));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(CalendarHomeScreen));
+    final tokens = context.appTheme;
+
+    expect(find.byType(AppPageContainer), findsOneWidget);
+    expect(find.byType(AppPageTitle), findsOneWidget);
+    expect(find.byType(AppContentCard), findsOneWidget);
+    expect(find.byType(AppStatRow), findsNWidgets(2));
+
+    final appName = tester.widget<Text>(
+      find.descendant(
+        of: find.byType(AppContentCard),
+        matching: find.text('日历'),
+      ),
+    );
+    final description = tester.widget<Text>(
+      find.text('本地日历专注记录事项和待办项，数据保存在当前设备内。'),
+    );
+    final clearButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, '清空本地数据'),
+    );
+
+    expect(appName.style?.fontSize, tokens.text.sectionTitle.fontSize);
+    expect(appName.style?.color, tokens.colors.textPrimary);
+    expect(description.style?.fontSize, tokens.text.body.fontSize);
+    expect(description.style?.color, tokens.colors.textSecondary);
+    expect(
+      clearButton.style?.backgroundColor?.resolve(<WidgetState>{}),
+      tokens.colors.dangerAction,
+    );
+    expect(
+      clearButton.style?.foregroundColor?.resolve(<WidgetState>{}),
+      tokens.colors.onDangerAction,
+    );
+  });
+
   testWidgets('bottom navigation fits narrow mobile screens', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -262,6 +503,47 @@ void main() {
     }
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('visual system pages avoid narrow mobile overflows', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final store = MemoryCalendarEventStore(
+      [
+        CalendarEvent(
+          date: DateTime(2026, 7, 14),
+          time: '09:00',
+          endTime: '09:30',
+          title: '晨间计划',
+          notes: '整理当天安排',
+          color: blueMarker,
+          icon: Icons.event_note_rounded,
+          iconBackground: const Color(0xffeef4ff),
+        ),
+      ],
+      [
+        TodoItem(
+          title: '买菜',
+          notes: '准备晚餐',
+          createdAt: DateTime(2026, 7, 14, 9),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+
+    for (final label in ['日程', '待办', '我的', '日历']) {
+      await tester.tap(_navigationLabel(label));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    }
   });
 
   testWidgets('bottom form shell keeps content above the bottom safe area', (
