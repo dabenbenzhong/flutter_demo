@@ -9,6 +9,44 @@ import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
 
 void main() {
   test(
+    'FileCalendarEventStore default store writes below platform app storage',
+    () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'calendar-store-default-test-',
+      );
+      addTearDown(() => tempDir.delete(recursive: true));
+
+      final store = await FileCalendarEventStore.createDefault(
+        getStorageDirectory: () async => tempDir,
+      );
+
+      await store.saveData(
+        LocalCalendarData(
+          todos: [
+            TodoItem(
+              title: '买菜',
+              notes: '准备晚餐',
+              createdAt: DateTime(2026, 7, 14, 9, 15),
+            ),
+          ],
+        ),
+      );
+
+      final expectedFile = File(
+        '${tempDir.path}${Platform.pathSeparator}calendar_events.json',
+      );
+      expect(await expectedFile.exists(), isTrue);
+
+      final reloaded = await FileCalendarEventStore(
+        file: expectedFile,
+      ).loadData();
+
+      expect(reloaded.todos, hasLength(1));
+      expect(reloaded.todos.single.title, '买菜');
+    },
+  );
+
+  test(
     'FileCalendarEventStore round-trips calendar events through JSON',
     () async {
       final tempDir = await Directory.systemTemp.createTemp(

@@ -1,6 +1,6 @@
 # 01 — Android 本地数据无法持久化，重启后新增数据丢失
 
-Status: ready-for-agent
+Status: resolved
 
 Severity: high
 
@@ -52,3 +52,19 @@ Unhandled Exception: FileSystemException: Creation failed, path = '//my_flutter_
 
 ## Comments
 
+### 2026-07-16 修复记录
+
+已修复 Android debug APK 在保存本地数据时使用根目录 `//my_flutter_demo` 的问题。Android 现在通过平台通道读取应用私有 `filesDir`，默认本地数据文件写入应用可写目录下的 `calendar_events.json`；桌面环境继续使用 `APPDATA`、`HOME` 或当前目录下的 `my_flutter_demo` 目录。
+
+验证：
+
+- `flutter test` 通过，37 项测试全部通过。
+- `flutter analyze` 通过，无静态分析问题。
+- 已检查本次修改涉及的中文文本，未发现乱码。
+- Android 设备复测：新增待办后 force-stop 并重新启动，待办仍保留。
+
+新增证据：
+
+- `.scratch/android-exploratory-qa/artifacts/11-after-fix-task-before-restart.png`
+- `.scratch/android-exploratory-qa/artifacts/12-after-fix-task-after-restart.png`
+- `.scratch/android-exploratory-qa/artifacts/logcat-after-fix-app-pid-final.txt`

@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_flutter_demo/features/calendar/models/calendar_event.dart';
 import 'package:my_flutter_demo/features/calendar/models/todo_item.dart';
+
+typedef StorageDirectoryLoader = Future<Directory> Function();
 
 class LocalCalendarData {
   LocalCalendarData({
@@ -81,18 +84,31 @@ class MemoryCalendarEventStore extends CalendarEventStore {
 }
 
 class FileCalendarEventStore extends CalendarEventStore {
-  FileCalendarEventStore({File? file}) : _file = file ?? File(_defaultPath());
+  FileCalendarEventStore({required this.file});
 
-  final File _file;
+  static const _localDataChannel = MethodChannel('my_flutter_demo/local_data');
+  static const _fileName = 'calendar_events.json';
+
+  final File file;
+
+  static Future<FileCalendarEventStore> createDefault({
+    StorageDirectoryLoader? getStorageDirectory,
+  }) async {
+    final storageDirectory =
+        await (getStorageDirectory ?? _defaultStorageDirectory)();
+    return FileCalendarEventStore(
+      file: File(_joinPath(storageDirectory.path, _fileName)),
+    );
+  }
 
   @override
   Future<LocalCalendarData> loadData() async {
-    if (!await _file.exists()) {
+    if (!await file.exists()) {
       return LocalCalendarData();
     }
 
     try {
-      final decoded = jsonDecode(await _file.readAsString());
+      final decoded = jsonDecode(await file.readAsString());
       if (decoded is List<dynamic>) {
         return LocalCalendarData(events: _eventsFromJsonList(decoded));
       }
@@ -117,31 +133,44 @@ class FileCalendarEventStore extends CalendarEventStore {
 
   @override
   Future<void> saveData(LocalCalendarData data) async {
-    await _file.parent.create(recursive: true);
+    await file.parent.create(recursive: true);
     final encoded = jsonEncode({
       'events': [for (final event in data.events) _eventToJson(event)],
       'todos': [for (final todo in data.todos) _todoToJson(todo)],
     });
-    await _file.writeAsString(encoded);
+    await file.writeAsString(encoded);
   }
 
   @override
   Future<void> clearData() async {
-    if (await _file.exists()) {
-      await _file.delete();
+    if (await file.exists()) {
+      await file.delete();
     }
   }
 
-  static String _defaultPath() {
+  static Future<Directory> _defaultStorageDirectory() async {
+    if (Platform.isAndroid) {
+      final path = await _localDataChannel.invokeMethod<String>(
+        'appFilesDirectory',
+      );
+      if (path == null || path.isEmpty) {
+        throw StateError('Android app files directory is unavailable.');
+      }
+      return Directory(path);
+    }
+
     final root =
         Platform.environment['APPDATA'] ??
         Platform.environment['HOME'] ??
         Directory.current.path;
-    return [
-      root,
-      'my_flutter_demo',
-      'calendar_events.json',
-    ].join(Platform.pathSeparator);
+    return Directory(_joinPath(root, 'my_flutter_demo'));
+  }
+
+  static String _joinPath(String first, String second) {
+    if (first.endsWith(Platform.pathSeparator)) {
+      return '$first$second';
+    }
+    return '$first${Platform.pathSeparator}$second';
   }
 }
 
