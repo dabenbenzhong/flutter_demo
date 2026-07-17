@@ -8,12 +8,14 @@ class AgendaSection extends StatelessWidget {
   const AgendaSection({
     required this.selectedDate,
     required this.events,
+    required this.onEditEvent,
     required this.onDeleteEvent,
     super.key,
   });
 
   final DateTime selectedDate;
   final List<CalendarEvent> events;
+  final ValueChanged<CalendarEvent> onEditEvent;
   final ValueChanged<CalendarEvent> onDeleteEvent;
 
   @override
@@ -49,6 +51,7 @@ class AgendaSection extends StatelessWidget {
                         for (final event in events) ...[
                           AgendaEventTile(
                             event: event,
+                            onEdit: () => onEditEvent(event),
                             onDelete: () => onDeleteEvent(event),
                           ),
                           if (event != events.last)
@@ -69,11 +72,13 @@ class AgendaSection extends StatelessWidget {
 class AgendaEventTile extends StatelessWidget {
   const AgendaEventTile({
     required this.event,
+    required this.onEdit,
     required this.onDelete,
     super.key,
   });
 
   final CalendarEvent event;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
@@ -136,7 +141,20 @@ class AgendaEventTile extends StatelessWidget {
             ),
           ),
           SizedBox(width: tokens.spacing.xs),
-          _EventIcon(event: event),
+          Semantics(
+            label: '编辑事项：${event.title}',
+            button: true,
+            excludeSemantics: true,
+            child: IconButton(
+              key: ValueKey(
+                'edit-event-${event.date.year}-${event.date.month}-${event.date.day}-${event.time}-${event.title}',
+              ),
+              tooltip: '编辑事项：${event.title}',
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined),
+              color: tokens.colors.textSecondary,
+            ),
+          ),
           IconButton(
             key: ValueKey(
               'delete-event-${event.date.year}-${event.date.month}-${event.date.day}-${event.time}-${event.title}',
@@ -364,32 +382,4 @@ String? _lunarDescription(DateTime date) {
   }
 
   return null;
-}
-
-class _EventIcon extends StatelessWidget {
-  const _EventIcon({required this.event});
-
-  final CalendarEvent event;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.appTheme;
-
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: event.iconBackground,
-        borderRadius: BorderRadius.circular(tokens.radii.control),
-        boxShadow: [
-          BoxShadow(
-            color: event.color.withValues(alpha: 0.16),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Icon(event.icon, color: event.color, size: 25),
-    );
-  }
 }

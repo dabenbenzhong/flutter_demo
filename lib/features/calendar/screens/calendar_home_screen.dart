@@ -84,17 +84,20 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
         onDateSelected: _selectDate,
         onPreviousMonth: () => _changeVisibleMonth(-1),
         onNextMonth: () => _changeVisibleMonth(1),
+        onEditEvent: _showEditEventSheet,
         onDeleteEvent: _confirmDeleteEvent,
       ),
       1 => _SchedulePage(
         events: _events,
         onGoToCalendar: () => _selectTab(0),
+        onEditEvent: _showEditEventSheet,
         onDeleteEvent: _confirmDeleteEvent,
       ),
       2 => _TodoPage(
         todos: _todos,
         onAddTodo: _showAddTodoSheet,
         onToggleTodo: _toggleTodo,
+        onEditTodo: _showEditTodoSheet,
         onDeleteTodo: _confirmDeleteTodo,
       ),
       _ => _ProfilePage(
@@ -182,6 +185,36 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     await _saveCurrentData();
   }
 
+  Future<void> _showEditEventSheet(CalendarEvent originalEvent) async {
+    final index = _events.indexOf(originalEvent);
+    if (index == -1) {
+      return;
+    }
+
+    final tokens = context.appTheme;
+    final event = await showModalBottomSheet<CalendarEvent>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      barrierColor: tokens.colors.textPrimary.withValues(alpha: 0.16),
+      backgroundColor: tokens.colors.surface.withValues(alpha: 0.96),
+      builder: (context) => EventFormSheet(
+        selectedDate: originalEvent.date,
+        initialEvent: originalEvent,
+      ),
+    );
+
+    if (event == null) {
+      return;
+    }
+
+    setState(() {
+      _dataMutationVersion++;
+      _events[index] = event;
+    });
+    await _saveCurrentData();
+  }
+
   Future<void> _showAddTodoSheet() async {
     final tokens = context.appTheme;
     final todo = await showModalBottomSheet<TodoItem>(
@@ -213,6 +246,33 @@ class _CalendarHomeScreenState extends State<CalendarHomeScreen> {
     setState(() {
       _dataMutationVersion++;
       _todos[index] = todo.copyWith(isCompleted: !todo.isCompleted);
+    });
+    await _saveCurrentData();
+  }
+
+  Future<void> _showEditTodoSheet(TodoItem originalTodo) async {
+    final index = _todos.indexOf(originalTodo);
+    if (index == -1) {
+      return;
+    }
+
+    final tokens = context.appTheme;
+    final todo = await showModalBottomSheet<TodoItem>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      barrierColor: tokens.colors.textPrimary.withValues(alpha: 0.16),
+      backgroundColor: tokens.colors.surface.withValues(alpha: 0.96),
+      builder: (context) => TodoFormSheet(initialTodo: originalTodo),
+    );
+
+    if (todo == null) {
+      return;
+    }
+
+    setState(() {
+      _dataMutationVersion++;
+      _todos[index] = todo;
     });
     await _saveCurrentData();
   }
@@ -314,6 +374,7 @@ class _CalendarPage extends StatelessWidget {
     required this.onDateSelected,
     required this.onPreviousMonth,
     required this.onNextMonth,
+    required this.onEditEvent,
     required this.onDeleteEvent,
   });
 
@@ -324,6 +385,7 @@ class _CalendarPage extends StatelessWidget {
   final ValueChanged<DateTime> onDateSelected;
   final VoidCallback onPreviousMonth;
   final VoidCallback onNextMonth;
+  final ValueChanged<CalendarEvent> onEditEvent;
   final ValueChanged<CalendarEvent> onDeleteEvent;
 
   @override
@@ -348,6 +410,7 @@ class _CalendarPage extends StatelessWidget {
           AgendaSection(
             selectedDate: selectedDate,
             events: selectedEvents,
+            onEditEvent: onEditEvent,
             onDeleteEvent: onDeleteEvent,
           ),
           SizedBox(height: tokens.spacing.xs),
@@ -367,11 +430,13 @@ class _SchedulePage extends StatelessWidget {
   const _SchedulePage({
     required this.events,
     required this.onGoToCalendar,
+    required this.onEditEvent,
     required this.onDeleteEvent,
   });
 
   final List<CalendarEvent> events;
   final VoidCallback onGoToCalendar;
+  final ValueChanged<CalendarEvent> onEditEvent;
   final ValueChanged<CalendarEvent> onDeleteEvent;
 
   @override
@@ -399,6 +464,7 @@ class _SchedulePage extends StatelessWidget {
               _ScheduleDateGroup(
                 date: group.date,
                 events: group.events,
+                onEditEvent: onEditEvent,
                 onDeleteEvent: onDeleteEvent,
               ),
               SizedBox(height: tokens.spacing.sm),
@@ -414,12 +480,14 @@ class _TodoPage extends StatelessWidget {
     required this.todos,
     required this.onAddTodo,
     required this.onToggleTodo,
+    required this.onEditTodo,
     required this.onDeleteTodo,
   });
 
   final List<TodoItem> todos;
   final VoidCallback onAddTodo;
   final ValueChanged<TodoItem> onToggleTodo;
+  final ValueChanged<TodoItem> onEditTodo;
   final ValueChanged<TodoItem> onDeleteTodo;
 
   @override
@@ -455,6 +523,7 @@ class _TodoPage extends StatelessWidget {
               _TodoTile(
                 todo: todo,
                 onToggle: () => onToggleTodo(todo),
+                onEdit: () => onEditTodo(todo),
                 onDelete: () => onDeleteTodo(todo),
               ),
               SizedBox(height: tokens.spacing.xs),
@@ -470,11 +539,13 @@ class _TodoTile extends StatelessWidget {
   const _TodoTile({
     required this.todo,
     required this.onToggle,
+    required this.onEdit,
     required this.onDelete,
   });
 
   final TodoItem todo;
   final VoidCallback onToggle;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
@@ -540,6 +611,18 @@ class _TodoTile extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ),
+          Semantics(
+            label: '编辑待办项：${todo.title}',
+            button: true,
+            excludeSemantics: true,
+            child: IconButton(
+              key: ValueKey('edit-todo-${todo.createdAt.toIso8601String()}'),
+              tooltip: '编辑待办项：${todo.title}',
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined),
+              color: tokens.colors.textSecondary,
             ),
           ),
           IconButton(
@@ -624,11 +707,13 @@ class _ScheduleDateGroup extends StatelessWidget {
   const _ScheduleDateGroup({
     required this.date,
     required this.events,
+    required this.onEditEvent,
     required this.onDeleteEvent,
   });
 
   final DateTime date;
   final List<CalendarEvent> events;
+  final ValueChanged<CalendarEvent> onEditEvent;
   final ValueChanged<CalendarEvent> onDeleteEvent;
 
   @override
@@ -684,6 +769,20 @@ class _ScheduleDateGroup extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                Semantics(
+                  label: '编辑事项：${event.title}',
+                  button: true,
+                  excludeSemantics: true,
+                  child: IconButton(
+                    key: ValueKey(
+                      'edit-schedule-event-${event.date.year}-${event.date.month}-${event.date.day}-${event.time}-${event.title}',
+                    ),
+                    tooltip: '编辑事项：${event.title}',
+                    onPressed: () => onEditEvent(event),
+                    icon: const Icon(Icons.edit_outlined),
+                    color: tokens.colors.textSecondary,
                   ),
                 ),
                 IconButton(

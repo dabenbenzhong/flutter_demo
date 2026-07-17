@@ -6,9 +6,14 @@ import 'package:my_flutter_demo/ui/components/app_components.dart';
 import 'package:my_flutter_demo/ui/theme/app_theme.dart';
 
 class EventFormSheet extends StatefulWidget {
-  const EventFormSheet({required this.selectedDate, super.key});
+  const EventFormSheet({
+    required this.selectedDate,
+    this.initialEvent,
+    super.key,
+  });
 
   final DateTime selectedDate;
+  final CalendarEvent? initialEvent;
 
   @override
   State<EventFormSheet> createState() => _EventFormSheetState();
@@ -21,6 +26,26 @@ class _EventFormSheetState extends State<EventFormSheet> {
   final _endTimeController = TextEditingController();
   final _notesController = TextEditingController();
   var _selectedColor = _eventColorOptions.first;
+
+  bool get _isEditing => widget.initialEvent != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final event = widget.initialEvent;
+    if (event == null) {
+      return;
+    }
+
+    _titleController.text = event.title;
+    _startTimeController.text = event.time;
+    _endTimeController.text = event.endTime;
+    _notesController.text = event.notes;
+    _selectedColor = _eventColorOptions.firstWhere(
+      (option) => option.color.toARGB32() == event.color.toARGB32(),
+      orElse: () => _eventColorOptions.first,
+    );
+  }
 
   @override
   void dispose() {
@@ -36,10 +61,11 @@ class _EventFormSheetState extends State<EventFormSheet> {
     final tokens = context.appTheme;
 
     return AppBottomFormShell(
-      title: '新增事项',
+      title: _isEditing ? '编辑事项' : '新增事项',
       subtitle: '日期：${widget.selectedDate.month}月${widget.selectedDate.day}日',
       formKey: _formKey,
       onSubmit: _save,
+      submitLabel: _isEditing ? '保存修改' : '保存',
       children: [
         AppFormTextField(
           controller: _titleController,
