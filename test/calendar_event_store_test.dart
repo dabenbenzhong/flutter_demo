@@ -140,4 +140,48 @@ void main() {
       expect(cleared.todoCount, 0);
     },
   );
+
+  test(
+    'loads legacy event-list JSON and saves it in the current format',
+    () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'calendar-store-legacy-test-',
+      );
+      addTearDown(() => tempDir.delete(recursive: true));
+      final file = File('${tempDir.path}${Platform.pathSeparator}legacy.json');
+      await file.writeAsString(
+        '[{"year":2026,"month":7,"day":13,"time":"10:00",'
+        '"endTime":"11:00","title":"旧格式事项","notes":"旧备注",'
+        '"color":4293958160,"iconBackground":4294963676}]',
+      );
+      final store = FileCalendarEventStore(file: file);
+
+      final legacyData = await store.loadData();
+      expect(legacyData.events.single.title, '旧格式事项');
+      expect(legacyData.todos, isEmpty);
+
+      final event = legacyData.events.single;
+      await store.saveData(
+        LocalCalendarData(
+          events: [
+            CalendarEvent(
+              date: event.date,
+              time: event.time,
+              endTime: event.endTime,
+              title: '已编辑旧格式事项',
+              notes: event.notes,
+              color: event.color,
+              icon: event.icon,
+              iconBackground: event.iconBackground,
+            ),
+          ],
+        ),
+      );
+      final reloaded = await store.loadData();
+
+      expect(reloaded.events.single.title, '已编辑旧格式事项');
+      expect(reloaded.events.single.color, event.color);
+      expect(reloaded.todos, isEmpty);
+    },
+  );
 }

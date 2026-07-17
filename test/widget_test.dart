@@ -374,6 +374,37 @@ void main() {
     expect(data.todos.single.createdAt, createdAt);
   });
 
+  testWidgets('persists an edited todo after rebuilding the app', (
+    tester,
+  ) async {
+    final createdAt = DateTime(2026, 7, 14, 9);
+    final store = MemoryCalendarEventStore([], [
+      TodoItem(title: '重建前待办', createdAt: createdAt),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(_todoEditKey(createdAt)));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '重建前待办'),
+      '重建后待办',
+    );
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('重建后待办'), findsOneWidget);
+    expect(find.text('重建前待办'), findsNothing);
+  });
+
   testWidgets('cancels todo editing without changing stored data', (
     tester,
   ) async {
@@ -395,6 +426,30 @@ void main() {
     final data = await store.loadData();
     expect(data.todos.single.title, '保留待办');
     expect(data.todos.single.notes, '保留备注');
+  });
+
+  testWidgets('todo editing requires a title and clears the error', (
+    tester,
+  ) async {
+    final createdAt = DateTime(2026, 7, 14, 9);
+    final store = MemoryCalendarEventStore([], [
+      TodoItem(title: '校验待办', createdAt: createdAt),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(_todoEditKey(createdAt)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, '校验待办'), '');
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+    expect(find.text('请填写'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), '已修正待办');
+    await tester.pumpAndSettle();
+    expect(find.text('请填写'), findsNothing);
   });
 
   testWidgets('schedule page groups sorted events and deletes in shared data', (
@@ -512,6 +567,38 @@ void main() {
     expect(find.text('日程旧标题'), findsNothing);
   });
 
+  testWidgets('cancels event editing from schedule without changing data', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 13),
+        time: '10:00',
+        endTime: '11:00',
+        title: '日程保留事项',
+        color: blueMarker,
+        icon: Icons.event_note_rounded,
+        iconBackground: const Color(0xffeef4ff),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('日程'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(_scheduleEditKey('2026-7-13-10:00-日程保留事项')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '日程保留事项'),
+      '不应保存',
+    );
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('日程保留事项'), findsOneWidget);
+    expect((await store.loadData()).events.single.title, '日程保留事项');
+  });
+
   testWidgets('schedule empty state opens calendar page without a form', (
     tester,
   ) async {
@@ -607,6 +694,56 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('0'), findsNWidgets(2));
+  });
+
+  testWidgets('editing events and todos keeps profile counts unchanged', (
+    tester,
+  ) async {
+    final createdAt = DateTime(2026, 7, 13, 9);
+    final store = MemoryCalendarEventStore(
+      [
+        CalendarEvent(
+          date: DateTime(2026, 7, 13),
+          time: '10:00',
+          endTime: '11:00',
+          title: '统计事项',
+          color: blueMarker,
+          icon: Icons.event_note_rounded,
+          iconBackground: const Color(0xffeef4ff),
+        ),
+      ],
+      [TodoItem(title: '统计待办', createdAt: createdAt)],
+    );
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    final eventEdit = find.byKey(_editKey('2026-7-13-10:00-统计事项'));
+    await tester.ensureVisible(eventEdit);
+    await tester.pumpAndSettle();
+    await tester.tap(eventEdit);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '统计事项'),
+      '更新统计事项',
+    );
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(_todoEditKey(createdAt)));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '统计待办'),
+      '更新统计待办',
+    );
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('我的'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('事项数量'), findsOneWidget);
+    expect(find.text('待办项数量'), findsOneWidget);
+    expect(find.text('1'), findsNWidgets(2));
   });
 
   testWidgets('renders the July 2026 calendar dashboard', (tester) async {
@@ -1021,6 +1158,88 @@ void main() {
     final data = await store.loadData();
     expect(data.events.single.title, '保留事项');
     expect(data.events.single.notes, '保留备注');
+  });
+
+  testWidgets('event editing enforces required and time validation rules', (
+    tester,
+  ) async {
+    final store = MemoryCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 13),
+        time: '10:00',
+        endTime: '11:00',
+        title: '校验事项',
+        color: blueMarker,
+        icon: Icons.event_note_rounded,
+        iconBackground: const Color(0xffeef4ff),
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    final editButton = find.byKey(_editKey('2026-7-13-10:00-校验事项'));
+    await tester.ensureVisible(editButton);
+    await tester.pumpAndSettle();
+    await tester.tap(editButton);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, '校验事项'), '');
+    await tester.enterText(find.widgetWithText(TextFormField, '10:00'), 'bad');
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+    expect(find.text('请填写'), findsOneWidget);
+    expect(find.text('请使用 HH:mm'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), '已修正标题');
+    await tester.enterText(find.widgetWithText(TextFormField, '开始时间'), '12:00');
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '11:00'),
+      '11:30',
+    );
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+    expect(find.text('结束时间必须晚于开始时间'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '结束时间'), '12:30');
+    await tester.pumpAndSettle();
+    expect(find.text('结束时间必须晚于开始时间'), findsNothing);
+  });
+
+  testWidgets('keeps an existing custom event color when editing text', (
+    tester,
+  ) async {
+    const customColor = Color(0xfff09a10);
+    const customIconBackground = Color(0xfffff1dc);
+    final store = MemoryCalendarEventStore([
+      CalendarEvent(
+        date: DateTime(2026, 7, 13),
+        time: '10:00',
+        endTime: '11:00',
+        title: '琥珀事项',
+        color: customColor,
+        icon: Icons.event_note_rounded,
+        iconBackground: customIconBackground,
+      ),
+    ]);
+
+    await tester.pumpWidget(CalendarApp(eventStore: store));
+    await tester.pumpAndSettle();
+    final editButton = find.byKey(_editKey('2026-7-13-10:00-琥珀事项'));
+    await tester.ensureVisible(editButton);
+    await tester.pumpAndSettle();
+    await tester.tap(editButton);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(ChoiceChip, '当前颜色'), findsOneWidget);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, '琥珀事项'),
+      '更新琥珀事项',
+    );
+    await tester.tap(find.text('保存修改'));
+    await tester.pumpAndSettle();
+
+    final event = (await store.loadData()).events.single;
+    expect(event.color, customColor);
+    expect(event.iconBackground, customIconBackground);
   });
 
   testWidgets('keeps an item when delete confirmation is cancelled', (

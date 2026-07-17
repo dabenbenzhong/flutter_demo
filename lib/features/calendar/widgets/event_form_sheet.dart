@@ -41,10 +41,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
     _startTimeController.text = event.time;
     _endTimeController.text = event.endTime;
     _notesController.text = event.notes;
-    _selectedColor = _eventColorOptions.firstWhere(
-      (option) => option.color.toARGB32() == event.color.toARGB32(),
-      orElse: () => _eventColorOptions.first,
-    );
+    _selectedColor = _colorOptionFor(event);
   }
 
   @override
@@ -54,6 +51,30 @@ class _EventFormSheetState extends State<EventFormSheet> {
     _endTimeController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  List<_EventColorOption> get _visibleColorOptions {
+    if (_eventColorOptions.any(
+      (option) => option.color.toARGB32() == _selectedColor.color.toARGB32(),
+    )) {
+      return _eventColorOptions;
+    }
+
+    return [_selectedColor, ..._eventColorOptions];
+  }
+
+  _EventColorOption _colorOptionFor(CalendarEvent event) {
+    for (final option in _eventColorOptions) {
+      if (option.color.toARGB32() == event.color.toARGB32()) {
+        return option;
+      }
+    }
+
+    return _EventColorOption(
+      label: '当前颜色',
+      color: event.color,
+      iconBackground: event.iconBackground,
+    );
   }
 
   @override
@@ -110,7 +131,7 @@ class _EventFormSheetState extends State<EventFormSheet> {
           spacing: tokens.spacing.xs,
           runSpacing: tokens.spacing.xs,
           children: [
-            for (final option in _eventColorOptions)
+            for (final option in _visibleColorOptions)
               ChoiceChip(
                 label: Text(option.label),
                 selected: option == _selectedColor,
