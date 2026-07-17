@@ -41,9 +41,10 @@ class _EventFormSheetState extends State<EventFormSheet> {
       formKey: _formKey,
       onSubmit: _save,
       children: [
-        TextFormField(
+        AppFormTextField(
           controller: _titleController,
-          decoration: const InputDecoration(labelText: '标题'),
+          labelText: '标题',
+          semanticLabel: '事项标题',
           textInputAction: TextInputAction.next,
           validator: _requiredTextValidator,
         ),
@@ -51,18 +52,20 @@ class _EventFormSheetState extends State<EventFormSheet> {
         Row(
           children: [
             Expanded(
-              child: TextFormField(
+              child: AppFormTextField(
                 controller: _startTimeController,
-                decoration: const InputDecoration(labelText: '开始时间'),
+                labelText: '开始时间',
+                semanticLabel: '事项开始时间',
                 textInputAction: TextInputAction.next,
                 validator: _clockTimeValidator,
               ),
             ),
             SizedBox(width: tokens.spacing.sm),
             Expanded(
-              child: TextFormField(
+              child: AppFormTextField(
                 controller: _endTimeController,
-                decoration: const InputDecoration(labelText: '结束时间'),
+                labelText: '结束时间',
+                semanticLabel: '事项结束时间',
                 textInputAction: TextInputAction.next,
                 validator: _endTimeValidator,
               ),
@@ -70,9 +73,10 @@ class _EventFormSheetState extends State<EventFormSheet> {
           ],
         ),
         SizedBox(height: tokens.spacing.sm),
-        TextFormField(
+        AppFormTextField(
           controller: _notesController,
-          decoration: const InputDecoration(labelText: '备注'),
+          labelText: '备注',
+          semanticLabel: '事项备注',
           maxLines: 2,
         ),
         SizedBox(height: tokens.spacing.md),

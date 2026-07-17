@@ -1,6 +1,6 @@
 # 04 — 表单空提交后再填写有效值，错误提示仍然残留
 
-Status: ready-for-agent
+Status: resolved
 
 Severity: medium
 
@@ -48,3 +48,14 @@ Severity: medium
 
 ## Comments
 
+### 2026-07-17 修复记录
+
+已修复新增事项和新增待办表单在空提交后错误提示残留的问题。表单输入框现在按字段使用 `AutovalidateMode.onUserInteraction`，用户输入有效内容后对应字段会即时重新校验并清除“请填写”提示，同时不会在提交前提前校验未触碰字段。
+
+验证：
+
+- 新增回归测试覆盖事项表单和待办表单错误提示随输入消失，以及提交前不提前校验未触碰字段。
+- `flutter test test/widget_test.dart` 通过，29 项测试全部通过。
+- `flutter analyze` 通过，无静态分析问题。
+- `flutter test` 通过，46 项测试全部通过。
+- 已检查本次修改涉及的中文文本，未发现乱码。

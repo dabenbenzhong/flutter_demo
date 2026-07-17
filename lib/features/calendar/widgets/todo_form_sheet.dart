@@ -31,16 +31,18 @@ class _TodoFormSheetState extends State<TodoFormSheet> {
       formKey: _formKey,
       onSubmit: _save,
       children: [
-        TextFormField(
+        AppFormTextField(
           controller: _titleController,
-          decoration: const InputDecoration(labelText: '标题'),
+          labelText: '标题',
+          semanticLabel: '待办项标题',
           textInputAction: TextInputAction.next,
           validator: _requiredTextValidator,
         ),
         SizedBox(height: tokens.spacing.sm),
-        TextFormField(
+        AppFormTextField(
           controller: _notesController,
-          decoration: const InputDecoration(labelText: '备注'),
+          labelText: '备注',
+          semanticLabel: '待办项备注',
           maxLines: 2,
         ),
       ],

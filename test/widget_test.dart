@@ -151,6 +151,43 @@ void main() {
     expect(find.text('准备晚餐'), findsOneWidget);
   });
 
+  testWidgets('todo form clears required-title error after valid input', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('待办'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('新增待办'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), 'Task1');
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsNothing);
+  });
+
+  testWidgets('add todo form exposes accessible field names', (tester) async {
+    await _withSemantics(tester, () async {
+      await tester.pumpWidget(CalendarApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('待办'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('新增待办'));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('待办项标题'), findsOneWidget);
+      expect(find.bySemanticsLabel('待办项备注'), findsOneWidget);
+    });
+  });
+
   testWidgets('todo page toggles sorts and confirms deletion', (tester) async {
     final oldCreatedAt = DateTime(2026, 7, 14, 9);
     final newCreatedAt = DateTime(2026, 7, 14, 10);
@@ -213,6 +250,24 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('已完成待办'), findsNothing);
+  });
+
+  testWidgets('todo checkbox exposes an accessible toggle name', (
+    tester,
+  ) async {
+    await _withSemantics(tester, () async {
+      final store = MemoryCalendarEventStore([], [
+        TodoItem(title: 'Task1', createdAt: DateTime(2026, 7, 14, 9)),
+      ]);
+
+      await tester.pumpWidget(CalendarApp(eventStore: store));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('待办'));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('切换 Task1 完成状态'), findsOneWidget);
+    });
   });
 
   testWidgets('todo completion state persists after rebuilding the app', (
@@ -448,6 +503,22 @@ void main() {
     expect(find.byIcon(Icons.add), findsOneWidget);
   });
 
+  testWidgets('does not show a bare lunar label without lunar data', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.text('31'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('下个月'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('9月30日'), findsOneWidget);
+    expect(find.text('农历'), findsNothing);
+  });
+
   testWidgets('month card exposes a five-week grid and selected day', (
     tester,
   ) async {
@@ -563,6 +634,63 @@ void main() {
     expect(find.text('新增事项'), findsOneWidget);
     expect(find.text('请填写'), findsNWidgets(3));
     expect(find.text('当天没有事项'), findsOneWidget);
+  });
+
+  testWidgets('event form clears required-field errors after valid input', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsNWidgets(3));
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), 'QAEvent');
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsNWidgets(2));
+
+    await tester.enterText(find.widgetWithText(TextFormField, '开始时间'), '10:00');
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '结束时间'), '11:00');
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsNothing);
+  });
+
+  testWidgets('event form does not validate untouched fields before submit', (
+    tester,
+  ) async {
+    await tester.pumpWidget(CalendarApp());
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextFormField, '标题'), 'QAEvent');
+    await tester.pumpAndSettle();
+
+    expect(find.text('请填写'), findsNothing);
+  });
+
+  testWidgets('add event form exposes accessible field names', (tester) async {
+    await _withSemantics(tester, () async {
+      await tester.pumpWidget(CalendarApp());
+
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('事项标题'), findsOneWidget);
+      expect(find.bySemanticsLabel('事项开始时间'), findsOneWidget);
+      expect(find.bySemanticsLabel('事项结束时间'), findsOneWidget);
+      expect(find.bySemanticsLabel('事项备注'), findsOneWidget);
+    });
   });
 
   testWidgets('rejects items whose end time is not after the start time', (
@@ -828,6 +956,18 @@ ValueKey<String> _todoToggleKey(DateTime createdAt) {
 
 ValueKey<String> _todoDeleteKey(DateTime createdAt) {
   return ValueKey('delete-todo-${createdAt.toIso8601String()}');
+}
+
+Future<void> _withSemantics(
+  WidgetTester tester,
+  Future<void> Function() body,
+) async {
+  final semanticsHandle = tester.ensureSemantics();
+  try {
+    await body();
+  } finally {
+    semanticsHandle.dispose();
+  }
 }
 
 class _DelayedCalendarEventStore extends CalendarEventStore {

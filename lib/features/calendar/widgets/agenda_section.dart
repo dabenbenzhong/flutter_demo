@@ -161,6 +161,7 @@ class _AgendaHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.appTheme;
+    final lunarDescription = _lunarDescription(selectedDate);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -198,17 +199,19 @@ class _AgendaHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: tokens.spacing.xs),
-              Text(
-                _lunarDescription(selectedDate),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tokens.text.helper.copyWith(
-                  color: tokens.colors.textSecondary,
-                  height: 1,
-                  fontWeight: FontWeight.w500,
+              if (lunarDescription != null) ...[
+                SizedBox(height: tokens.spacing.xs),
+                Text(
+                  lunarDescription,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tokens.text.helper.copyWith(
+                    color: tokens.colors.textSecondary,
+                    height: 1,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -347,7 +350,7 @@ String _weekdayText(DateTime date) {
   return weekdays[date.weekday - 1];
 }
 
-String _lunarDescription(DateTime date) {
+String? _lunarDescription(DateTime date) {
   if (date.year == 2026 && date.month == 7 && date.day == 13) {
     return '农历五月廿九';
   }
@@ -360,7 +363,7 @@ String _lunarDescription(DateTime date) {
     }
   }
 
-  return '农历';
+  return null;
 }
 
 class _EventIcon extends StatelessWidget {

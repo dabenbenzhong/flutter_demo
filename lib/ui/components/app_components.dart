@@ -237,6 +237,44 @@ class AppDangerButton extends StatelessWidget {
   }
 }
 
+class AppFormTextField extends StatelessWidget {
+  const AppFormTextField({
+    required this.controller,
+    required this.labelText,
+    this.semanticLabel,
+    this.textInputAction,
+    this.validator,
+    this.maxLines = 1,
+    super.key,
+  });
+
+  final TextEditingController controller;
+  final String labelText;
+  final String? semanticLabel;
+  final TextInputAction? textInputAction;
+  final FormFieldValidator<String>? validator;
+  final int? maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return MergeSemantics(
+      child: Semantics(
+        label: semanticLabel ?? labelText,
+        child: TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            label: ExcludeSemantics(child: Text(labelText)),
+          ),
+          maxLines: maxLines,
+          textInputAction: textInputAction,
+          validator: validator,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+        ),
+      ),
+    );
+  }
+}
+
 class AppConfirmDialog extends StatelessWidget {
   const AppConfirmDialog({
     required this.title,

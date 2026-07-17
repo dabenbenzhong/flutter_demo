@@ -1,6 +1,6 @@
 # 06 — 表单输入框和待办复选框缺少可访问名称
 
-Status: ready-for-agent
+Status: resolved
 
 Severity: medium
 
@@ -44,3 +44,14 @@ class="android.widget.CheckBox" content-desc="" checkable="true"
 
 ## Comments
 
+### 2026-07-17 修复记录
+
+已修复新增事项表单、新增待办表单输入框和待办复选框缺少可访问名称的问题。表单输入框统一通过 `AppFormTextField` 暴露业务语义名称，待办复选框暴露“切换 <待办项标题> 完成状态”的可访问名称。
+
+验证：
+
+- 新增回归测试覆盖事项表单字段、待办表单字段和待办复选框语义名称。
+- `flutter test test/widget_test.dart` 通过，29 项测试全部通过。
+- `flutter analyze` 通过，无静态分析问题。
+- `flutter test` 通过，46 项测试全部通过。
+- 已检查本次修改涉及的中文文本，未发现乱码。

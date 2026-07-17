@@ -493,13 +493,20 @@ class _TodoTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Checkbox(
-            key: ValueKey('toggle-todo-${todo.createdAt.toIso8601String()}'),
-            value: todo.isCompleted,
-            activeColor: tokens.colors.statusSuccess,
-            checkColor: tokens.colors.onPrimaryAction,
-            side: BorderSide(color: tokens.colors.border, width: 1.4),
-            onChanged: (_) => onToggle(),
+          MergeSemantics(
+            child: Semantics(
+              label: '切换 ${todo.title} 完成状态',
+              child: Checkbox(
+                key: ValueKey(
+                  'toggle-todo-${todo.createdAt.toIso8601String()}',
+                ),
+                value: todo.isCompleted,
+                activeColor: tokens.colors.statusSuccess,
+                checkColor: tokens.colors.onPrimaryAction,
+                side: BorderSide(color: tokens.colors.border, width: 1.4),
+                onChanged: (_) => onToggle(),
+              ),
+            ),
           ),
           SizedBox(width: tokens.spacing.xxs),
           Expanded(
